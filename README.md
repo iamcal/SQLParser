@@ -12,3 +12,8 @@ of a pain.
 The SQL parsing is based on [php-sql-parser](http://code.google.com/p/php-sql-parser/), which is 
 included here.
 
+
+## Early results
+
+It takes 48 seconds just to lex my 84K sample schema (114 tables from Glitch's main database).
+I'll need to optimize this step a lot.
