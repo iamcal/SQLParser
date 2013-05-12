@@ -6,5 +6,6 @@
 		is_deeply(lex_sql($str), $tokens);
 	}
 
+	plan(1);
 
 	lex_test('hello world', array('hello', 'world'));
