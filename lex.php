@@ -182,9 +182,11 @@
 
 		if (next_tokens($tokens, '(')){
 			array_shift($tokens);
-			$fields = parse_create_definition($tokens);
+			$ret = parse_create_definition($tokens);
+			$fields = $ret;
 		}
 
+		$props = parse_read_table_props($tokens);
 
 
 		$table = array(
@@ -196,7 +198,7 @@
 
 echo "CREATE TABLE {$name}\n";
 print_r($table);
-#exit;
+exit;
 	}
 
 
@@ -362,4 +364,64 @@ print_r($table);
 			'type'		=> $type,
 			'tokens'	=> $tokens,
 		);
+	}
+
+	function parse_read_table_props(&$tokens){
+
+		$props = array();
+
+		while (count($tokens)){
+
+		switch (StrToUpper($tokens[0])){
+			case 'ENGINE':
+			case 'AUTO_INCREMENT':
+			case 'AVG_ROW_LENGTH':
+			case 'CHECKSUM':
+			case 'COMMENT':
+			case 'CONNECTION':
+			case 'DELAY_KEY_WRITE':
+			case 'INSERT_METHOD':
+			case 'KEY_BLOCK_SIZE':
+			case 'MAX_ROWS':
+			case 'MIN_ROWS':
+			case 'PACK_KEYS':
+			case 'PASSWORD':
+			case 'ROW_FORMAT':
+				$prop = StrToUpper(array_shift($tokens));
+				if ($tokens[0] == '=') array_shift($tokens);
+				$props[$prop] = array_shift($tokens);
+				if ($tokens[0] == ',') array_shift($tokens);
+				break;
+
+			case 'DEFAULT':
+				$prop = null;
+				if (StrToUpper($tokens[1]) == 'COLLATE'){
+					$prop = 'COLLATE';
+					array_shift($tokens);
+					array_shift($tokens);
+				}
+				if (StrToUpper($tokens[1]) == 'CHARACTER' && StrToUpper($tokens[2]) == 'SET'){
+					$prop = 'CHARACTER SET';
+					array_shift($tokens);
+					array_shift($tokens);
+					array_shift($tokens);
+				}
+				if (StrToUpper($tokens[1]) == 'CHARSET'){
+					$prop = 'CHARACTER SET';
+					array_shift($tokens);
+					array_shift($tokens);
+				}
+				if ($prop){
+					if ($tokens[0] == '=') array_shift($tokens);
+					$props[$prop] = array_shift($tokens);
+					if ($tokens[0] == ',') array_shift($tokens);
+					break;
+				}
+
+			default:
+				break 2;
+		}
+		}
+
+		return $props;
 	}
