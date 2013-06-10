@@ -6,6 +6,10 @@
 		is_deeply(lex_sql($str), $tokens);
 	}
 
-	plan(1);
+	plan(2);
 
+	# simple word tokens
 	lex_test('hello world', array('hello', 'world'));
+
+	# comments and whitespace get stripped
+	lex_test("hello \nworld-- foo\nyeah", array('hello', 'world', 'yeah'));
