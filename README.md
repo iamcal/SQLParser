@@ -21,3 +21,14 @@ The current implementation uses a hand-written lexer which takes around 140ms to
 input and imposes less odd restrictions. This seems to be the way to go.
 
 Create table syntax: http://dev.mysql.com/doc/refman/5.1/en/create-table.html
+
+
+## Unsupported features
+
+MySQL table definitions have a *lot* of options, so some things just aren't supported. They include:
+
+* `UNION` table properties
+* `TABLESPACE` table properties
+* table partitions
+
+If you need support for one of these features, open an issue or (better) send a pull request with tests.
