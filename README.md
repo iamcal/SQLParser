@@ -9,11 +9,15 @@ between production and development databases and between shard instances. The or
 just showed a diff (see [SchemaDiff](https://github.com/iamcal/SchemaDiff)), but that was a bit
 of a pain.
 
-The SQL parsing is based on [php-sql-parser](http://code.google.com/p/php-sql-parser/), which is 
-included here.
-
 
 ## Early results
 
-It takes 48 seconds just to lex my 84K sample schema (114 tables from Glitch's main database).
-I'll need to optimize this step a lot.
+My test target is an 84K SQL file containing 114 tables from Glitch's main database.
+
+The first version, using [php-sql-parser](http://code.google.com/p/php-sql-parser/), took over 60
+seconds just to lex the input. This was obviously not a great option.
+
+The current implementation uses a hand-written lexer which takes around 140ms to lex the same
+input and imposes less odd restrictions. This seems to be the way to go.
+
+Create table syntax: http://dev.mysql.com/doc/refman/5.1/en/create-table.html
