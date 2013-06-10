@@ -3,7 +3,9 @@
 	include(dirname(__FILE__).'/../lex.php');
 
 	function lex_test($str, $tokens){
-		is_deeply(lex_sql($str), $tokens);
+		$obj = new SchemaCompSchema();
+
+		is_deeply($obj->lex($str), $tokens);
 	}
 
 	plan(2);

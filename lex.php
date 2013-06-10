@@ -1,10 +1,29 @@
 <?php
 
+class SchemaCompSchema{
+
+	#
+	# the main public interface is very simple
+	#
+
+	public $tokens = array();
+	public $tables = array();
+
+	public function parse($sql){
+
+		$this->tokens = $this->lex($sql);
+		$ret = $this->walk($this->tokens);
+
+		$this->tables = $ret['tables'];
+	}
+
+
+
 	#
 	# simple lexer based on http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
 	#
 
-	function lex_sql($sql){
+	public function lex($sql){
 
 		$pos = 0;
 		$len = strlen($sql);
@@ -88,7 +107,7 @@
 	}
 
 
-	function parse_sql($tokens){
+	function walk($tokens){
 
 
 		#
@@ -116,22 +135,22 @@
 
 		foreach ($statements as $s){
 
-			if (next_tokens($s, 'CREATE', 'TABLE')){
+			if ($this->next_tokens($s, 'CREATE', 'TABLE')){
 
 				array_shift($s); # CREATE
 				array_shift($s); # TABLE
 
-				$table = parse_create_table($s);
+				$table = $this->parse_create_table($s);
 				$tables[$table['name']] = $table;
 			}
 
-			if (next_tokens($s, 'CREATE', 'TEMPORARY', 'TABLE')){
+			if ($this->next_tokens($s, 'CREATE', 'TEMPORARY', 'TABLE')){
 
 				array_shift($s); # CREATE
 				array_shift($s); # TEMPORARY
 				array_shift($s); # TABLE
 
-				$table = parse_create_table($s);
+				$table = $this->parse_create_table($s);
 				$table['props']['temp'] = true;
 				$tables[$table['name']] = $table;
 			}
@@ -145,7 +164,7 @@
 
 	function parse_create_table($tokens){
 
-		if (next_tokens($tokens, 'IF', 'NOT', 'EXISTS')){
+		if ($this->next_tokens($tokens, 'IF', 'NOT', 'EXISTS')){
 			array_shift($tokens);
 			array_shift($tokens);
 			array_shift($tokens);
@@ -156,16 +175,16 @@
 		# name
 		#
 
-		$name = shift_field_name($tokens);
+		$name = $this->shift_field_name($tokens);
 
 
 		#
 		# CREATE TABLE x LIKE y
 		#
 
-		if (next_tokens($tokens, 'LIKE')){
+		if ($this->next_tokens($tokens, 'LIKE')){
 			array_shift($tokens);
-			$old_name = shift_field_name($tokens);
+			$old_name = $this->shift_field_name($tokens);
 
 			return array(
 				'name'	=> $name,
@@ -180,13 +199,13 @@
 
 		$fields = array();
 
-		if (next_tokens($tokens, '(')){
+		if ($this->next_tokens($tokens, '(')){
 			array_shift($tokens);
-			$ret = parse_create_definition($tokens);
+			$ret = $this->parse_create_definition($tokens);
 			$fields = $ret;
 		}
 
-		$props = parse_read_table_props($tokens);
+		$props = $this->parse_read_table_props($tokens);
 
 
 		$table = array(
@@ -227,7 +246,7 @@ exit;
 
 		$fields = array();
 
-		while (!next_tokens($tokens, ')')){
+		while (!$this->next_tokens($tokens, ')')){
 
 			#
 			# parse a single create_definition
@@ -245,7 +264,7 @@ exit;
 
 			if ($next == 'INDEX' || $next == 'KEY'){
 				array_shift($tokens);
-				$fields[] = parse_key(slice_until_next_field($tokens));
+				$fields[] = parse_key($this->slice_until_next_field($tokens));
 				continue;
 			}
 
@@ -254,7 +273,7 @@ exit;
 				if ($next2 == 'INDEX' || $next2 == 'KEY'){
 					array_shift($tokens);
 					array_shift($tokens);
-					$fields[] = parse_key(slice_until_next_field($tokens), $next);
+					$fields[] = parse_key($this->slice_until_next_field($tokens), $next);
 					continue;
 				}				
 			}
@@ -266,7 +285,7 @@ exit;
 
 				$fields[] = array(
 					'_'		=> 'CONSTRAINT',
-					'tokens'	=> slice_until_next_field($tokens),
+					'tokens'	=> $this->slice_until_next_field($tokens),
 				);
 				continue;
 			}
@@ -275,12 +294,12 @@ exit;
 
 				$fields[] = array(
 					'_'		=> 'CHECK',
-					'tokens'	=> slice_until_next_field($tokens),
+					'tokens'	=> $this->slice_until_next_field($tokens),
 				);
 				continue;
 			}
 
-			$fields[] = parse_field(slice_until_next_field($tokens));
+			$fields[] = $this->parse_field($this->slice_until_next_field($tokens));
 		}
 
 		array_shift($tokens); # closing paren
@@ -328,7 +347,7 @@ exit;
 
 		$f = array(
 			'_'	=> 'fields',
-			'name'	=> shift_field_name($tokens),
+			'name'	=> $this->shift_field_name($tokens),
 			'type'	=> StrToUpper(array_shift($tokens)),
 		);
 
@@ -352,7 +371,7 @@ exit;
 
 		}
 
-		$f['tokens'] = slice_until_next_field($tokens);
+		$f['tokens'] = $this->slice_until_next_field($tokens);
 
 		return $f;
 	}
@@ -425,3 +444,4 @@ exit;
 
 		return $props;
 	}
+}
