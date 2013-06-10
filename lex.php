@@ -406,6 +406,7 @@ exit;
 			case 'PACK_KEYS':
 			case 'PASSWORD':
 			case 'ROW_FORMAT':
+			case 'COLLATE':
 				$prop = StrToUpper(array_shift($tokens));
 				if ($tokens[0] == '=') array_shift($tokens);
 				$props[$prop] = array_shift($tokens);

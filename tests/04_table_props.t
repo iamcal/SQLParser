@@ -11,8 +11,7 @@
 	}
 
 
-	plan(6);
-
+	plan(8);
 
 
 	# the equals is optional
@@ -27,3 +26,6 @@
 	table_props_test(array('CHARACTER', 'SET',		'foo'), array('CHARACTER SET' => 'foo'));
 	table_props_test(array('DEFAULT', 'CHARSET',		'foo'), array('CHARACTER SET' => 'foo'));
 	table_props_test(array('CHARSET',			'foo'), array('CHARACTER SET' => 'foo'));
+
+	table_props_test(array('DEFAULT', 'COLLATE',	'bar'), array('COLLATE' => 'bar'));
+	table_props_test(array('COLLATE',		'bar'), array('COLLATE' => 'bar'));
