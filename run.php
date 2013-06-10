@@ -3,7 +3,14 @@
 
 	$sql = file_get_contents('glitch_full.sql');
 
-	print_r(lex_sql($sql));
+	$s = microtime(true);
+	$tokens = lex_sql($sql);
+	$e = microtime(true);
+
+	print_r($tokens);
+
+	$ms = round(1000 * ($e - $s));
+	echo "Lexing took $ms ms\n";
 
 	#var_export(parse_sql(lex_sql($sql)));
 
