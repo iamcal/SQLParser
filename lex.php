@@ -430,6 +430,18 @@ exit;
 					break;
 				}
 
+			case 'DATA':
+			case 'INDEX':
+				if (StrToUpper($tokens[1]) == 'DIRECTORY'){
+					$prop = StrToUpper($tokens[0]).' DIRECTORY';
+					array_shift($tokens);
+					array_shift($tokens);
+					if ($tokens[0] == '=') array_shift($tokens);
+					$props[$prop] = array_shift($tokens);
+					if ($tokens[0] == ',') array_shift($tokens);
+					break;
+				}
+
 			case 'DEFAULT':
 				$prop = null;
 				if (StrToUpper($tokens[1]) == 'COLLATE'){

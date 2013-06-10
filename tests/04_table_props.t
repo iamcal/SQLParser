@@ -11,7 +11,7 @@
 	}
 
 
-	plan(8);
+	plan(10);
 
 
 	# the equals is optional
@@ -29,3 +29,9 @@
 
 	table_props_test(array('DEFAULT', 'COLLATE',	'bar'), array('COLLATE' => 'bar'));
 	table_props_test(array('COLLATE',		'bar'), array('COLLATE' => 'bar'));
+
+
+	# more two-word props
+
+	table_props_test(array('DATA',  'DIRECTORY', '=', 'baz'), array('DATA DIRECTORY'  => 'baz'));
+	table_props_test(array('INDEX', 'DIRECTORY', '=', 'baz'), array('INDEX DIRECTORY' => 'baz'));
