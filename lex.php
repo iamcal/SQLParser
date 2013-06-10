@@ -1,11 +1,4 @@
 <?php
-	#$sql = file_get_contents('glitch_full.sql');
-
-	#var_export(parse_sql(lex_sql($sql)));
-
-	#var_export(lex_sql("hello \nworld-- foo\nyeah"));
-
-
 
 	#
 	# simple lexer based on http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
