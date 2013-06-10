@@ -1,5 +1,5 @@
 all:
 	@echo "Future build step will go here";
 
-test: all
+test:
 	@prove --exec 'php' tests/*.t
