@@ -205,7 +205,7 @@ class SchemaCompSchema{
 			$fields = $ret;
 		}
 
-		$props = $this->parse_read_table_props($tokens);
+		$props = $this->parse_table_props($tokens);
 
 
 		$table = array(
@@ -385,7 +385,7 @@ exit;
 		);
 	}
 
-	function parse_read_table_props(&$tokens){
+	function parse_table_props(&$tokens){
 
 		$props = array();
 
@@ -411,6 +411,23 @@ exit;
 				$props[$prop] = array_shift($tokens);
 				if ($tokens[0] == ',') array_shift($tokens);
 				break;
+
+			case 'CHARSET':
+				array_shift($tokens);
+				if ($tokens[0] == '=') array_shift($tokens);
+				$props['CHARACTER SET'] = array_shift($tokens);
+				if ($tokens[0] == ',') array_shift($tokens);
+				break;
+
+			case 'CHARACTER':
+				if (StrToUpper($tokens[1]) == 'SET'){
+					array_shift($tokens);
+					array_shift($tokens);
+					if ($tokens[0] == '=') array_shift($tokens);
+					$props['CHARACTER SET'] = array_shift($tokens);
+					if ($tokens[0] == ',') array_shift($tokens);
+					break;
+				}
 
 			case 'DEFAULT':
 				$prop = null;
