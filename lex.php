@@ -114,6 +114,8 @@ class SchemaCompSchema{
 		# split into statements
 		#
 
+		$tokens = $this->collapse_tokens($tokens);
+
 		$statements = array();
 		$temp = array();
 		foreach ($tokens as $t){
@@ -135,8 +137,6 @@ class SchemaCompSchema{
 
 		foreach ($statements as $s){
 
-			$s = $this->collapse_tokens($s);
-
 			if ($s[0] == 'CREATE TABLE'){
 
 				array_shift($s);
@@ -153,6 +153,7 @@ class SchemaCompSchema{
 				$table['props']['temp'] = true;
 				$tables[$table['name']] = $table;
 			}
+if (count($tables)) return;
 		}
 
 		return array(
@@ -163,9 +164,7 @@ class SchemaCompSchema{
 
 	function parse_create_table($tokens){
 
-		if ($this->next_tokens($tokens, 'IF', 'NOT', 'EXISTS')){
-			array_shift($tokens);
-			array_shift($tokens);
+		if ($tokens[0] == 'IF NOT EXISTS'){
 			array_shift($tokens);
 		}
 
@@ -218,7 +217,7 @@ class SchemaCompSchema{
 
 echo "CREATE TABLE {$name}\n";
 print_r($table);
-exit;
+#exit;
 	}
 
 
@@ -274,7 +273,11 @@ exit;
 
 				$next2 = StrToUpper($tokens[1]);
 
-				if ($next2 == 'PRIMARY' || $next2 == 'UNIQUE' || $next2 == 'FOREIGN'){
+				if ($next2 == 'PRIMARY KEY'
+					|| $next2 == 'UNIQUE'
+					|| $next2 == 'UNIQUE KEY'
+					|| $next2 == 'UNIQUE INDEX'
+					|| $next2 == 'FOREIGN KEY'){
 					array_shift($tokens);
 				}else{
 					array_shift($tokens);
@@ -301,8 +304,8 @@ exit;
 
 				$unique = false;
 				if ($next == 'UNIQUE') $unique = true;
-				if ($next == 'UNIQUE') $unique = true;
-				if ($next == 'UNIQUE') $unique = true;
+				if ($next == 'UNIQUE INDEX') $unique = true;
+				if ($next == 'UNIQUE KEY') $unique = true;
 
 				array_shift($tokens);
 
@@ -311,6 +314,11 @@ exit;
 				}
 			}
 
+
+
+			#
+			# older code
+			#
 
 			if ($next == 'INDEX' || $next == 'KEY'){
 				array_shift($tokens);
@@ -330,9 +338,6 @@ exit;
 
 			if ($next == 'PRIMARY'){
 			}
-
-
-
 
 
 			if ($next == 'CHECK'){
@@ -517,6 +522,7 @@ exit;
 			'CHARACTER SET',
 			'DEFAULT CHARSET',
 			'DEFAULT COLLATE',
+			'IF NOT EXISTS',
 		);
 
 		$maps = array();
@@ -526,25 +532,31 @@ exit;
 		}
 
 		$out = array();
-		while (count($tokens)){
-			$next = StrToUpper($tokens[0]);
+		$i = 0;
+		$len = count($tokens);
+		while ($i < $len){
+			$next = StrToUpper($tokens[$i]);
 			if (is_array($maps[$next])){
+				$found = false;
 				foreach ($maps[$next] as $list){
 					$fail = false;
 					foreach ($list as $k => $v){
-						if ($v != StrToUpper($tokens[$k])){
+						if ($v != StrToUpper($tokens[$k+$i])){
 							$fail = true;
 							break;
 						}
 					}
 					if (!$fail){
-						foreach ($list as $k => $v) array_shift($tokens);
+						$i += count($list);
 						$out[] = implode(' ', $list);
-						break 2;
+						$found = true;
+						break;
 					}
 				}
+				if ($found) continue;
 			}
-			$out[] = array_shift($tokens);
+			$out[] = $tokens[$i];
+			$i++;
 		}
 
 		return $out;
