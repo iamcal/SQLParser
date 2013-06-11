@@ -35,3 +35,6 @@
 
 	table_props_test(array('DATA',  'DIRECTORY', '=', 'baz'), array('DATA DIRECTORY'  => 'baz'));
 	table_props_test(array('INDEX', 'DIRECTORY', '=', 'baz'), array('INDEX DIRECTORY' => 'baz'));
+
+
+	# TODO: case conversion, multiple options, optional commas
