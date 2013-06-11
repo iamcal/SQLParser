@@ -135,6 +135,8 @@ class SchemaCompSchema{
 
 		foreach ($statements as $s){
 
+			$s = $this->collapse_tokens($s);
+
 			if ($this->next_tokens($s, 'CREATE', 'TABLE')){
 
 				array_shift($s); # CREATE
@@ -202,7 +204,8 @@ class SchemaCompSchema{
 		if ($this->next_tokens($tokens, '(')){
 			array_shift($tokens);
 			$ret = $this->parse_create_definition($tokens);
-			$fields = $ret;
+			$fields = $ret['fields'];
+			$indexes = $ret['indexes'];
 		}
 
 		$props = $this->parse_table_props($tokens);
@@ -211,6 +214,7 @@ class SchemaCompSchema{
 		$table = array(
 			'name'		=> $name,
 			'fields'	=> $fields,
+			'indexes'	=> $indexes,
 			'props'		=> $props,
 			'more'		=> $tokens,
 		);
@@ -245,6 +249,7 @@ exit;
 	function parse_create_definition(&$tokens){
 
 		$fields = array();
+		$indexes = array();
 
 		while (!$this->next_tokens($tokens, ')')){
 
@@ -256,15 +261,63 @@ exit;
 			$is_primary = false;
 			$is_fulltext = false;
 			$is_spatial = false;
+			$has_constraint = false;
+			$constraint = null;
 
 			$next = StrToUpper($tokens[0]);
 
 
-			# short-circuit indexes
+			#
+			# constraints can come before a few different things
+			#
+
+			if ($next == 'CONSTRAINT'){
+
+				$has_constraint = true;
+
+				$next2 = StrToUpper($tokens[1]);
+
+				if ($next2 == 'PRIMARY' || $next2 == 'UNIQUE' || $next2 == 'FOREIGN'){
+					array_shift($tokens);
+				}else{
+					array_shift($tokens);
+					$constraint = array_shift($tokens);
+				}
+
+				$next = StrToUpper($tokens[0]);
+			}
+
+
+			#
+			# named indexes
+			#
+			# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			#
+
+			$next = StrToUpper($tokens[0]);
+
+			if ($next == 'INDEX' || $next == 'KEY' || $next == 'UNIQUE' || $next == 'UNIQUE INDEX' || $next == 'UNIQUE KEY'){
+
+				$unique = false;
+				if ($next == 'UNIQUE') $unique = true;
+				if ($next == 'UNIQUE') $unique = true;
+				if ($next == 'UNIQUE') $unique = true;
+
+				array_shift($tokens);
+
+				$next = StrToUpper($tokens[0]);
+				if ($next != '(' && $next != 'USING'){
+				}
+			}
+
 
 			if ($next == 'INDEX' || $next == 'KEY'){
 				array_shift($tokens);
-				$fields[] = parse_key($this->slice_until_next_field($tokens));
+				$indexes[] = parse_key($this->slice_until_next_field($tokens));
 				continue;
 			}
 
@@ -273,22 +326,17 @@ exit;
 				if ($next2 == 'INDEX' || $next2 == 'KEY'){
 					array_shift($tokens);
 					array_shift($tokens);
-					$fields[] = parse_key($this->slice_until_next_field($tokens), $next);
+					$indexes[] = parse_key($this->slice_until_next_field($tokens), $next);
 					continue;
 				}				
 			}
 
-
-			# exotic things
-
-			if ($next == 'CONSTRAINT'){
-
-				$fields[] = array(
-					'_'		=> 'CONSTRAINT',
-					'tokens'	=> $this->slice_until_next_field($tokens),
-				);
-				continue;
+			if ($next == 'PRIMARY'){
 			}
+
+
+
+
 
 			if ($next == 'CHECK'){
 
@@ -304,7 +352,10 @@ exit;
 
 		array_shift($tokens); # closing paren
 
-		return $fields;
+		return array(
+			'fields'	=> $fields,
+			'indexes'	=> $indexes,
+		);
 	}
 
 
@@ -474,4 +525,61 @@ exit;
 
 		return $props;
 	}
+
+
+
+	# We can simplify parsing by merging certain tokens when
+	# they occur next to each other. MySQL treats these productions
+	# equally: 'UNIQUE|UNIQUE INDEX|UNIQUE KEY' and if they are
+	# all always a single token it makes parsing easier.
+
+	function collapse_tokens($tokens){
+
+		$lists = array(
+			'FULLTEXT INDEX',
+			'FULLTEXT KEY',
+			'SPATIAL INDEX',
+			'SPATIAL KEY',
+			'FOREIGN KEY',
+			'USING BTREE',
+			'USING HASH',
+			'PRIMARY KEY',
+			'UNIQUE INDEX',
+			'UNIQUE KEY',
+			'CREATE TABLE',
+			'CREATE TEMPORARY TABLE',
+		);
+
+		$maps = array();
+		foreach ($lists as $l){
+			$a = explode(' ', $l);
+			$maps[$a[0]][] = $a;
+		}
+
+		$out = array();
+		while (count($tokens)){
+			$next = StrToUpper($tokens[0]);
+			if (is_array($maps[$next])){
+				foreach ($maps[$next] as $list){
+					$fail = false;
+					foreach ($list as $k => $v){
+						if ($v != StrToUpper($tokens[$k])){
+							$fail = true;
+							break;
+						}
+					}
+					if (!$fail){
+						foreach ($list as $k => $v) array_shift($tokens);
+						$out[] = implode(' ', $list);
+						break 2;
+					}
+				}
+			}
+			$out[] = array_shift($tokens);
+		}
+
+		return $out;
+	}
 }
+
+
