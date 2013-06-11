@@ -137,20 +137,17 @@ class SchemaCompSchema{
 
 			$s = $this->collapse_tokens($s);
 
-			if ($this->next_tokens($s, 'CREATE', 'TABLE')){
+			if ($s[0] == 'CREATE TABLE'){
 
-				array_shift($s); # CREATE
-				array_shift($s); # TABLE
+				array_shift($s);
 
 				$table = $this->parse_create_table($s);
 				$tables[$table['name']] = $table;
 			}
 
-			if ($this->next_tokens($s, 'CREATE', 'TEMPORARY', 'TABLE')){
+			if ($s[0] == 'CREATE TEMPORARY TABLE'){
 
-				array_shift($s); # CREATE
-				array_shift($s); # TEMPORARY
-				array_shift($s); # TABLE
+				array_shift($s);
 
 				$table = $this->parse_create_table($s);
 				$table['props']['temp'] = true;
@@ -438,6 +435,13 @@ exit;
 
 	function parse_table_props(&$tokens){
 
+		$alt_names = array(
+			'CHARACTER SET'		=> 'CHARSET',
+			'DEFAULT CHARACTER SET'	=> 'CHARSET',
+			'DEFAULT CHARSET'	=> 'CHARSET',
+			'DEFAULT COLLATE'	=> 'COLLATE',
+		);
+
 		$props = array();
 
 		while (count($tokens)){
@@ -458,65 +462,24 @@ exit;
 			case 'PASSWORD':
 			case 'ROW_FORMAT':
 			case 'COLLATE':
+			case 'CHARSET':
+			case 'DATA DIRECTORY':
+			case 'INDEX DIRECTORY':
 				$prop = StrToUpper(array_shift($tokens));
 				if ($tokens[0] == '=') array_shift($tokens);
 				$props[$prop] = array_shift($tokens);
 				if ($tokens[0] == ',') array_shift($tokens);
 				break;
 
-			case 'CHARSET':
-				array_shift($tokens);
+			case 'CHARACTER SET':
+			case 'DEFAULT COLLATE':
+			case 'DEFAULT CHARACTER SET':
+			case 'DEFAULT CHARSET':
+				$prop = $alt_names[StrToUpper(array_shift($tokens))];
 				if ($tokens[0] == '=') array_shift($tokens);
-				$props['CHARACTER SET'] = array_shift($tokens);
+				$props[$prop] = array_shift($tokens);
 				if ($tokens[0] == ',') array_shift($tokens);
 				break;
-
-			case 'CHARACTER':
-				if (StrToUpper($tokens[1]) == 'SET'){
-					array_shift($tokens);
-					array_shift($tokens);
-					if ($tokens[0] == '=') array_shift($tokens);
-					$props['CHARACTER SET'] = array_shift($tokens);
-					if ($tokens[0] == ',') array_shift($tokens);
-					break;
-				}
-
-			case 'DATA':
-			case 'INDEX':
-				if (StrToUpper($tokens[1]) == 'DIRECTORY'){
-					$prop = StrToUpper($tokens[0]).' DIRECTORY';
-					array_shift($tokens);
-					array_shift($tokens);
-					if ($tokens[0] == '=') array_shift($tokens);
-					$props[$prop] = array_shift($tokens);
-					if ($tokens[0] == ',') array_shift($tokens);
-					break;
-				}
-
-			case 'DEFAULT':
-				$prop = null;
-				if (StrToUpper($tokens[1]) == 'COLLATE'){
-					$prop = 'COLLATE';
-					array_shift($tokens);
-					array_shift($tokens);
-				}
-				if (StrToUpper($tokens[1]) == 'CHARACTER' && StrToUpper($tokens[2]) == 'SET'){
-					$prop = 'CHARACTER SET';
-					array_shift($tokens);
-					array_shift($tokens);
-					array_shift($tokens);
-				}
-				if (StrToUpper($tokens[1]) == 'CHARSET'){
-					$prop = 'CHARACTER SET';
-					array_shift($tokens);
-					array_shift($tokens);
-				}
-				if ($prop){
-					if ($tokens[0] == '=') array_shift($tokens);
-					$props[$prop] = array_shift($tokens);
-					if ($tokens[0] == ',') array_shift($tokens);
-					break;
-				}
 
 			default:
 				break 2;
@@ -548,6 +511,12 @@ exit;
 			'UNIQUE KEY',
 			'CREATE TABLE',
 			'CREATE TEMPORARY TABLE',
+			'DATA DIRECTORY',
+			'INDEX DIRECTORY',
+			'DEFAULT CHARACTER SET',
+			'CHARACTER SET',
+			'DEFAULT CHARSET',
+			'DEFAULT COLLATE',
 		);
 
 		$maps = array();
