@@ -16,7 +16,7 @@ if (0){
 	echo "Lexing took $ms ms\n";
 }
 
-if (1){
+if (0){
 	$s = microtime(true);
 	$tokens = $obj->lex($sql);
 	$e = microtime(true);
@@ -31,7 +31,7 @@ if (1){
 	echo "Collapsing took $ms2 ms\n";
 }
 
-if (0){
+if (1){
 
 	$s = microtime(true);
 	$obj->parse($sql);

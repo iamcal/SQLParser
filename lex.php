@@ -247,109 +247,11 @@ print_r($table);
 		$fields = array();
 		$indexes = array();
 
-		while (!$this->next_tokens($tokens, ')')){
+		while ($tokens[0] != ')'){
 
-			#
-			# parse a single create_definition
-			#
+			$these_tokens = $this->slice_until_next_field($tokens);
 
-			$is_key = false;
-			$is_primary = false;
-			$is_fulltext = false;
-			$is_spatial = false;
-			$has_constraint = false;
-			$constraint = null;
-
-			$next = StrToUpper($tokens[0]);
-
-
-			#
-			# constraints can come before a few different things
-			#
-
-			if ($next == 'CONSTRAINT'){
-
-				$has_constraint = true;
-
-				$next2 = StrToUpper($tokens[1]);
-
-				if ($next2 == 'PRIMARY KEY'
-					|| $next2 == 'UNIQUE'
-					|| $next2 == 'UNIQUE KEY'
-					|| $next2 == 'UNIQUE INDEX'
-					|| $next2 == 'FOREIGN KEY'){
-					array_shift($tokens);
-				}else{
-					array_shift($tokens);
-					$constraint = array_shift($tokens);
-				}
-
-				$next = StrToUpper($tokens[0]);
-			}
-
-
-			#
-			# named indexes
-			#
-			# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			#
-
-			$next = StrToUpper($tokens[0]);
-
-			if ($next == 'INDEX' || $next == 'KEY' || $next == 'UNIQUE' || $next == 'UNIQUE INDEX' || $next == 'UNIQUE KEY'){
-
-				$unique = false;
-				if ($next == 'UNIQUE') $unique = true;
-				if ($next == 'UNIQUE INDEX') $unique = true;
-				if ($next == 'UNIQUE KEY') $unique = true;
-
-				array_shift($tokens);
-
-				$next = StrToUpper($tokens[0]);
-				if ($next != '(' && $next != 'USING'){
-				}
-			}
-
-
-
-			#
-			# older code
-			#
-
-			if ($next == 'INDEX' || $next == 'KEY'){
-				array_shift($tokens);
-				$indexes[] = parse_key($this->slice_until_next_field($tokens));
-				continue;
-			}
-
-			if ($next == 'FULLTEXT' || $next == 'SPATIAL'){
-				$next2 = StrToUpper($tokens[1]);
-				if ($next2 == 'INDEX' || $next2 == 'KEY'){
-					array_shift($tokens);
-					array_shift($tokens);
-					$indexes[] = parse_key($this->slice_until_next_field($tokens), $next);
-					continue;
-				}				
-			}
-
-			if ($next == 'PRIMARY'){
-			}
-
-
-			if ($next == 'CHECK'){
-
-				$fields[] = array(
-					'_'		=> 'CHECK',
-					'tokens'	=> $this->slice_until_next_field($tokens),
-				);
-				continue;
-			}
-
-			$fields[] = $this->parse_field($this->slice_until_next_field($tokens));
+			$this->parse_field_or_key($these_tokens, $fields, $indexes);
 		}
 
 		array_shift($tokens); # closing paren
@@ -359,6 +261,131 @@ print_r($table);
 			'indexes'	=> $indexes,
 		);
 	}
+
+	function parse_field_or_key(&$tokens, &$fields, &$indexes){
+
+		#
+		# parse a single create_definition
+		#
+
+		$is_key = false;
+		$is_primary = false;
+		$is_fulltext = false;
+		$is_spatial = false;
+		$has_constraint = false;
+		$constraint = null;
+
+		$next = StrToUpper($tokens[0]);
+
+
+		#
+		# constraints can come before a few different things
+		#
+
+		if ($next == 'CONSTRAINT'){
+
+			$has_constraint = true;
+
+			$next2 = StrToUpper($tokens[1]);
+
+			if ($next2 == 'PRIMARY KEY'
+				|| $next2 == 'UNIQUE'
+				|| $next2 == 'UNIQUE KEY'
+				|| $next2 == 'UNIQUE INDEX'
+				|| $next2 == 'FOREIGN KEY'){
+				array_shift($tokens);
+			}else{
+				array_shift($tokens);
+				$constraint = array_shift($tokens);
+			}
+
+			$next = StrToUpper($tokens[0]);
+		}
+
+
+		#
+		# named indexes
+		#
+		# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+		# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+		# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+		# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+		# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+		#
+
+		$next = StrToUpper($tokens[0]);
+
+		if ($next == 'INDEX' || $next == 'KEY' || $next == 'UNIQUE' || $next == 'UNIQUE INDEX' || $next == 'UNIQUE KEY'){
+
+			$unique = false;
+			if ($next == 'UNIQUE') $unique = true;
+			if ($next == 'UNIQUE INDEX') $unique = true;
+			if ($next == 'UNIQUE KEY') $unique = true;
+
+			array_shift($tokens);
+
+			$next = StrToUpper($tokens[0]);
+			if ($next != '(' && $next != 'USING'){
+			}
+		}
+
+
+		#
+		# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
+		#
+
+		if ($next == 'PRIMARY KEY'){
+
+			$index = array(
+				'type'	=> 'PRIMARY',
+			);
+
+			array_shift($tokens);
+			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
+			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'btree'; array_shift($tokens); }
+
+			$this->parse_index_columns($tokens, $index);
+			$this->parse_index_options($tokens, $index);
+
+			$index['more'] = $tokens;
+			$indexes[] = $index;
+			return;
+		}
+
+
+
+		#
+		# older code
+		#
+
+		if ($next == 'INDEX' || $next == 'KEY'){
+			array_shift($tokens);
+			$indexes[] = parse_key($tokens);
+			continue;
+		}
+
+		if ($next == 'FULLTEXT' || $next == 'SPATIAL'){
+			$next2 = StrToUpper($tokens[1]);
+			if ($next2 == 'INDEX' || $next2 == 'KEY'){
+				array_shift($tokens);
+				array_shift($tokens);
+				$indexes[] = parse_key($tokens, $next);
+				continue;
+			}				
+		}
+
+		if ($next == 'CHECK'){
+
+			$fields[] = array(
+				'_'		=> 'CHECK',
+				'tokens'	=> $tokens,
+			);
+			continue;
+		}
+
+		$fields[] = $this->parse_field($tokens);
+	}
+
 
 
 	function slice_until_next_field(&$tokens){
@@ -572,6 +599,27 @@ print_r($table);
 		}
 
 		return $out;
+	}
+
+
+	function parse_index_columns(&$tokens, &$index){
+
+		if ($tokens[0] != '(') return;
+		array_shift($tokens);
+
+		while ($tokens[0] != ')'){
+
+			$index['cols'][] = $tokens[0];
+			array_shift($tokens);
+
+			if ($tokens[0] == ')') break;
+			if ($tokens[0] == ',') array_shift($tokens);
+		}
+
+		array_shift($tokens);
+	}
+
+	function parse_index_options(&$tokens, &$index){
 	}
 }
 
