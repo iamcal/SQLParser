@@ -268,10 +268,6 @@ print_r($table);
 		# parse a single create_definition
 		#
 
-		$is_key = false;
-		$is_primary = false;
-		$is_fulltext = false;
-		$is_spatial = false;
 		$has_constraint = false;
 		$constraint = null;
 
@@ -317,16 +313,29 @@ print_r($table);
 
 		if ($next == 'INDEX' || $next == 'KEY' || $next == 'UNIQUE' || $next == 'UNIQUE INDEX' || $next == 'UNIQUE KEY'){
 
-			$unique = false;
-			if ($next == 'UNIQUE') $unique = true;
-			if ($next == 'UNIQUE INDEX') $unique = true;
-			if ($next == 'UNIQUE KEY') $unique = true;
+			$index = array(
+				'type' => 'INDEX',
+			);
+
+			if ($next == 'UNIQUE'		) $index['type'] = 'UNIQUE';
+			if ($next == 'UNIQUE INDEX'	) $index['type'] = 'UNIQUE';
+			if ($next == 'UNIQUE KEY'	) $index['type'] = 'UNIQUE';
 
 			array_shift($tokens);
 
-			$next = StrToUpper($tokens[0]);
-			if ($next != '(' && $next != 'USING'){
+			$name = null;
+			if ($tokens[0] != '(' && $tokens[0] != 'USING BTREE' && $tokens[0] != 'USING HASH'){
+				$name = $next;
+				array_shift($tokens);
 			}
+
+			$this->parse_index_type($tokens, $index);
+			$this->parse_index_columns($tokens, $index);
+			$this->parse_index_options($tokens, $index);
+
+			$index['more'] = $tokens;
+			$indexes[] = $index;
+			return;
 		}
 
 
@@ -341,9 +350,8 @@ print_r($table);
 			);
 
 			array_shift($tokens);
-			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
-			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'btree'; array_shift($tokens); }
 
+			$this->parse_index_type($tokens, $index);
 			$this->parse_index_columns($tokens, $index);
 			$this->parse_index_options($tokens, $index);
 
@@ -353,26 +361,7 @@ print_r($table);
 		}
 
 
-
-		#
-		# older code
-		#
-
-		if ($next == 'INDEX' || $next == 'KEY'){
-			array_shift($tokens);
-			$indexes[] = parse_key($tokens);
-			continue;
-		}
-
-		if ($next == 'FULLTEXT' || $next == 'SPATIAL'){
-			$next2 = StrToUpper($tokens[1]);
-			if ($next2 == 'INDEX' || $next2 == 'KEY'){
-				array_shift($tokens);
-				array_shift($tokens);
-				$indexes[] = parse_key($tokens, $next);
-				continue;
-			}				
-		}
+		# older stuff
 
 		if ($next == 'CHECK'){
 
@@ -426,7 +415,6 @@ print_r($table);
 		$_num_types	= array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INTEGER', 'BIGINT', 'REAL', 'DOUBLE', 'FLOAT', 'DECIMAL', 'NUMERIC');
 
 		$f = array(
-			'_'	=> 'fields',
 			'name'	=> $this->shift_field_name($tokens),
 			'type'	=> StrToUpper(array_shift($tokens)),
 		);
@@ -451,18 +439,9 @@ print_r($table);
 
 		}
 
-		$f['tokens'] = $this->slice_until_next_field($tokens);
+		$f['more'] = $tokens;
 
 		return $f;
-	}
-
-	function parse_key($tokens, $type=null){
-
-		return array(
-			'_'		=> 'KEY',
-			'type'		=> $type,
-			'tokens'	=> $tokens,
-		);
 	}
 
 	function parse_table_props(&$tokens){
@@ -601,6 +580,10 @@ print_r($table);
 		return $out;
 	}
 
+	function parse_index_type(&$tokens, &$index){
+		if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
+		if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'btree'; array_shift($tokens); }
+	}
 
 	function parse_index_columns(&$tokens, &$index){
 
