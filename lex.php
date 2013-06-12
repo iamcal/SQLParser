@@ -567,7 +567,12 @@ print_r($table);
 
 		$singles = array(
 			'NULL',
+			'CONSTRAINT',
+			'INDEX',
+			'KEY',
+			'UNIQUE',
 		);
+
 
 		$maps = array();
 		foreach ($lists as $l){
