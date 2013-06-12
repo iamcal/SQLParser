@@ -523,6 +523,11 @@ print_r($table);
 			'DEFAULT CHARSET',
 			'DEFAULT COLLATE',
 			'IF NOT EXISTS',
+			'NOT NULL',
+		);
+
+		$singles = array(
+			'NULL',
 		);
 
 		$maps = array();
@@ -530,6 +535,8 @@ print_r($table);
 			$a = explode(' ', $l);
 			$maps[$a[0]][] = $a;
 		}
+		$smap = array();
+		foreach ($singles as $s) $smap[$s] = 1;
 
 		$out = array();
 		$i = 0;
@@ -554,6 +561,11 @@ print_r($table);
 					}
 				}
 				if ($found) continue;
+			}
+			if ($smap[$next]){
+				$out[] = $next;
+				$i++;
+				continue;
 			}
 			$out[] = $tokens[$i];
 			$i++;
