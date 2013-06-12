@@ -271,111 +271,144 @@ print_r($table);
 		$has_constraint = false;
 		$constraint = null;
 
-		$next = StrToUpper($tokens[0]);
-
 
 		#
 		# constraints can come before a few different things
 		#
 
-		if ($next == 'CONSTRAINT'){
+		if ($tokens[0] == 'CONSTRAINT'){
 
 			$has_constraint = true;
 
-			$next2 = StrToUpper($tokens[1]);
-
-			if ($next2 == 'PRIMARY KEY'
-				|| $next2 == 'UNIQUE'
-				|| $next2 == 'UNIQUE KEY'
-				|| $next2 == 'UNIQUE INDEX'
-				|| $next2 == 'FOREIGN KEY'){
+			if ($tokens[1] == 'PRIMARY KEY'
+				|| $tokens[1] == 'UNIQUE'
+				|| $tokens[1] == 'UNIQUE KEY'
+				|| $tokens[1] == 'UNIQUE INDEX'
+				|| $tokens[1] == 'FOREIGN KEY'){
 				array_shift($tokens);
 			}else{
 				array_shift($tokens);
 				$constraint = array_shift($tokens);
 			}
-
-			$next = StrToUpper($tokens[0]);
 		}
 
 
-		#
-		# named indexes
-		#
-		# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-		# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-		# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-		# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-		# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-		#
+		switch ($tokens[0]){
 
-		$next = StrToUpper($tokens[0]);
+			#
+			# named indexes
+			#
+			# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			#
 
-		if ($next == 'INDEX' || $next == 'KEY' || $next == 'UNIQUE' || $next == 'UNIQUE INDEX' || $next == 'UNIQUE KEY'){
+			case 'INDEX':
+			case 'KEY':
+			case 'UNIQUE':
+			case 'UNIQUE INDEX':
+			case 'UNIQUE KEY':
 
-			$index = array(
-				'type' => 'INDEX',
-			);
+				$index = array(
+					'type' => 'INDEX',
+				);
 
-			if ($next == 'UNIQUE'		) $index['type'] = 'UNIQUE';
-			if ($next == 'UNIQUE INDEX'	) $index['type'] = 'UNIQUE';
-			if ($next == 'UNIQUE KEY'	) $index['type'] = 'UNIQUE';
+				if ($tokens[0] == 'UNIQUE'	) $index['type'] = 'UNIQUE';
+				if ($tokens[0] == 'UNIQUE INDEX') $index['type'] = 'UNIQUE';
+				if ($tokens[0] == 'UNIQUE KEY'	) $index['type'] = 'UNIQUE';
 
-			array_shift($tokens);
-
-			$name = null;
-			if ($tokens[0] != '(' && $tokens[0] != 'USING BTREE' && $tokens[0] != 'USING HASH'){
-				$name = $next;
 				array_shift($tokens);
-			}
 
-			$this->parse_index_type($tokens, $index);
-			$this->parse_index_columns($tokens, $index);
-			$this->parse_index_options($tokens, $index);
+				$name = null;
+				if ($tokens[0] != '(' && $tokens[0] != 'USING BTREE' && $tokens[0] != 'USING HASH'){
+					$name = $tokens[0];
+					array_shift($tokens);
+				}
 
-			$index['more'] = $tokens;
-			$indexes[] = $index;
-			return;
-		}
+				$this->parse_index_type($tokens, $index);
+				$this->parse_index_columns($tokens, $index);
+				$this->parse_index_options($tokens, $index);
+
+				$index['more'] = $tokens;
+				$indexes[] = $index;
+				return;
+		
+
+			#
+			# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
+			#
+
+			case 'PRIMARY KEY':
+
+				$index = array(
+					'type'	=> 'PRIMARY',
+				);
+
+				array_shift($tokens);
+
+				$this->parse_index_type($tokens, $index);
+				$this->parse_index_columns($tokens, $index);
+				$this->parse_index_options($tokens, $index);
+
+				$index['more'] = $tokens;
+				$indexes[] = $index;
+				return;
 
 
-		#
-		# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
-		#
+			# FULLTEXT		[index_name] (index_col_name,...) [index_option] ...
+			# FULLTEXT INDEX	[index_name] (index_col_name,...) [index_option] ...
+			# FULLTEXT KEY		[index_name] (index_col_name,...) [index_option] ...
+			# SPATIAL		[index_name] (index_col_name,...) [index_option] ...
+			# SPATIAL INDEX		[index_name] (index_col_name,...) [index_option] ...
+			# SPATIAL KEY		[index_name] (index_col_name,...) [index_option] ...
 
-		if ($next == 'PRIMARY KEY'){
+			case 'FULLTEXT':
+			case 'FULLTEXT INDEX':
+			case 'FULLTEXT KEY':
+			case 'SPATIAL':
+			case 'SPATIAL INDEX':
+			case 'SPATIAL KEY':
 
-			$index = array(
-				'type'	=> 'PRIMARY',
-			);
+				$index = array(
+					'type' => 'FULLTEXT',
+				);
 
-			array_shift($tokens);
+				if ($tokens[0] == 'SPATIAL'	) $index['type'] = 'SPATIAL';
+				if ($tokens[0] == 'SPATIAL INDEX') $index['type'] = 'SPATIAL';
+				if ($tokens[0] == 'SPATIAL KEY'	) $index['type'] = 'SPATIAL';
 
-			$this->parse_index_type($tokens, $index);
-			$this->parse_index_columns($tokens, $index);
-			$this->parse_index_options($tokens, $index);
+				array_shift($tokens);
 
-			$index['more'] = $tokens;
-			$indexes[] = $index;
-			return;
-		}
+				$name = null;
+				if ($tokens[0] != '('){
+					$name = $tokens[0];
+					array_shift($tokens);
+				}
+
+				$this->parse_index_type($tokens, $index);
+				$this->parse_index_columns($tokens, $index);
+				$this->parse_index_options($tokens, $index);
+
+				$index['more'] = $tokens;
+				$indexes[] = $index;
+				return;
 
 
-		# older stuff
+			# older stuff
 
-		if ($next == 'CHECK'){
+			case 'CHECK':
 
-			$fields[] = array(
-				'_'		=> 'CHECK',
-				'tokens'	=> $tokens,
-			);
-			continue;
+				$fields[] = array(
+					'_'		=> 'CHECK',
+					'tokens'	=> $tokens,
+				);
+				return;
 		}
 
 		$fields[] = $this->parse_field($tokens);
 	}
-
-
 
 	function slice_until_next_field(&$tokens){
 
