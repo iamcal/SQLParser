@@ -30,5 +30,6 @@ MySQL table definitions have a *lot* of options, so some things just aren't supp
 * `UNION` table properties
 * `TABLESPACE` table properties
 * table partitions
+* Spatial field types
 
 If you need support for one of these features, open an issue or (better) send a pull request with tests.

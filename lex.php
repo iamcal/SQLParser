@@ -446,33 +446,113 @@ class SchemaCompSchema{
 
 	function parse_field($tokens){
 
-		$_bare_types	= array('DATE', 'TIME', 'TIMESTAMP', 'DATETIME', 'YEAR', 'TINYBLOB', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB');
-		$_num_types	= array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INTEGER', 'BIGINT', 'REAL', 'DOUBLE', 'FLOAT', 'DECIMAL', 'NUMERIC');
-
 		$f = array(
 			'name'	=> $this->shift_field_name($tokens),
 			'type'	=> StrToUpper(array_shift($tokens)),
 		);
 
-		if (in_array($f['type'], $_bare_types)){
+		switch ($f['type']){
 
-			# nothing more to read
+			# DATE
+			case 'DATE':
+			case 'TIME':
+			case 'TIMESTAMP':
+			case 'DATETIME':
+			case 'YEAR':
+			case 'TINYBLOB':
+			case 'BLOB':
+			case 'MEDIUMBLOB':
+			case 'LONGDATE':
 
-		}elseif (in_array($f['type'], $_num_types)){
+				# nothing more to read
+				break;
 
-			# optional length (maybe with 2 parts
-			# optional unsigned
-			# optional zerofill
 
-		}elseif ($f['type'] == 'BIT' || $f['type'] == 'BINARY'){
+			# TINYINT[(length)] [UNSIGNED] [ZEROFILL]
+			case 'TINYINT':
+			case 'SMALLINT':
+			case 'MEDIUMINT':
+			case 'INT':
+			case 'INTEGER':
+			case 'BIGINT':
 
-			# optional size
+				# optional length
+				# optional unsigned
+				# optional zerofill
+				break;
 
-		}elseif ($f['type'] == 'VARBINARY'){
 
-			# required size
+			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+			case 'REAL':
+			case 'DOUBLE':
+			case 'FLOAT':
 
+				# optional length, 2 parts
+				# optional unsigned
+				# optional zerofill
+				break;
+
+
+			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+			case 'DECIMAL':
+			case 'NUMERIC':
+
+				# optional length, 1 or 2 parts
+				# optional unsigned
+				# optional zerofill
+				break;
+
+
+			# BIT[(length)]
+			# BINARY[(length)]
+			case 'BIT':
+			case 'BINARY':
+
+				# optional size
+				break;
+
+
+			# VARBINARY(length)
+			case 'VARBINARY':
+
+				# length
+				break;
+
+			# CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
+			case 'CHAR':
+				break;
+
+			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
+			case 'VARCHAR':
+				break;
+
+			# TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# TEXT       [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# MEDIUMTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# LONGTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			case 'TINYTEXT':
+			case 'TEXT':
+			case 'MEDIUMTEXT':
+			case 'LONGTEXT':
+				break;
+
+			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+			# SET (value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+			case 'ENUM':
+			case 'SET':
+				break;
+
+			default:
+				die("Unsupported field type: {$f['type']}");
 		}
+
+
+		# [NOT NULL | NULL] [DEFAULT default_value]
+		#      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
+		#      [COMMENT 'string']
+		#      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+		#      [STORAGE {DISK|MEMORY|DEFAULT}]
+		#      [reference_definition]
 
 		$f['more'] = $tokens;
 
