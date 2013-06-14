@@ -33,11 +33,13 @@ if (0){
 
 if (1){
 
+	$GLOBALS['_find_single_table'] = 1;
+
 	$s = microtime(true);
 	$obj->parse($sql);
 	$e = microtime(true);
 
-	var_export($obj->tables);
+	print_r($obj->tables);
 
 	$ms = round(1000 * ($e - $s));
 	echo "Parse took $ms ms\n";

@@ -15,6 +15,7 @@ class SchemaCompSchema{
 		$ret = $this->walk($this->tokens);
 
 		$this->tables = $ret['tables'];
+		return $this->tables;
 	}
 
 
@@ -153,7 +154,10 @@ class SchemaCompSchema{
 				$table['props']['temp'] = true;
 				$tables[$table['name']] = $table;
 			}
-if (count($tables)) return;
+
+			if ($GLOBALS['_find_single_table'] && count($tables)) return array(
+				'tables' => $tables,
+			);
 		}
 
 		return array(
@@ -215,9 +219,7 @@ if (count($tables)) return;
 			'more'		=> $tokens,
 		);
 
-echo "CREATE TABLE {$name}\n";
-print_r($table);
-#exit;
+		return $table;
 	}
 
 
