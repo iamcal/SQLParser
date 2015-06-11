@@ -1,8 +1,7 @@
-# SchemaComp - Compare two MySQL schemas in PHP
+# SQLParser - Parse MySQL schemas in PHP, fast
 
-This experimental project aims to compare the schema of two MySQL databases by looking at 
-their `CREATE TABLE` syntax, then figure out what needs to be done to migrate one to the 
-other.
+This library was created to parse multiple `CREATE TABLE` schemas and compare them, so
+figure out what needs to be done to migrate one to the other.
 
 This is based on the system used at b3ta, Flickr and then Tiny Speck to check the differences
 between production and development databases and between shard instances. The original system 
@@ -10,9 +9,9 @@ just showed a diff (see [SchemaDiff](https://github.com/iamcal/SchemaDiff)), but
 of a pain.
 
 
-## Early results
+## Performance
 
-My test target is an 84K SQL file containing 114 tables from Glitch's main database.
+My test target is an 88K SQL file containing 114 tables from Glitch's main database.
 
 The first version, using [php-sql-parser](http://code.google.com/p/php-sql-parser/), took over 60
 seconds just to lex the input. This was obviously not a great option.
