@@ -1,10 +1,10 @@
 <?php
 	include(dirname(__FILE__).'/testmore.php');
-	include(dirname(__FILE__).'/../lex.php');
+	include(dirname(__FILE__).'/../lib_sql_parser.php');
 
 	function table_props_test($tokens, $props_expect){
 
-		$obj = new SchemaCompSchema();
+		$obj = new SQLParser();
 		$props = $obj->parse_table_props($tokens);
 
 		is_deeply($props, $props_expect);

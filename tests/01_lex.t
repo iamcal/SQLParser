@@ -1,9 +1,9 @@
 <?php
 	include(dirname(__FILE__).'/testmore.php');
-	include(dirname(__FILE__).'/../lex.php');
+	include(dirname(__FILE__).'/../lib_sql_parser.php');
 
 	function lex_test($str, $tokens){
-		$obj = new SchemaCompSchema();
+		$obj = new SQLParser();
 
 		is_deeply($obj->lex($str), $tokens);
 	}

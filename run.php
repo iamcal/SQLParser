@@ -1,9 +1,9 @@
 <?php
-	include('lex.php');
+	include('lib_sql_parser.php');
 
-	$sql = file_get_contents('glitch_full.sql');
+	$sql = file_get_contents('data/glitch_main.sql');
 
-	$obj = new SchemaCompSchema();
+	$obj = new SQLParser();
 
 if (0){
 	$s = microtime(true);
