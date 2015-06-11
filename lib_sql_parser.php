@@ -1,6 +1,6 @@
 <?php
 
-class SchemaCompSchema{
+class SQLParser{
 
 	#
 	# the main public interface is very simple
