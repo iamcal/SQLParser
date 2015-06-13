@@ -82,6 +82,16 @@ class SQLParser{
 			}
 
 			# <unsigned numeric literal>
+			#	<unsigned integer> [ <period> [ <unsigned integer> ] ]
+			#	<period> <unsigned integer>
+			#	<unsigned integer> ::= <digit>...
+			if (preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $m, 0, $pos)){
+				$tokens[] = substr($sql, $pos, strlen($m[0]));
+				$pos += strlen($m[0]);
+				continue;
+			}
+
+			# <approximate numeric literal> :: <mantissa> E <exponent>
 			# <national character string literal>
 			# <bit string literal>
 			# <hex string literal>
