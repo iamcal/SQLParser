@@ -486,9 +486,9 @@ class SQLParser{
 			case 'INTEGER':
 			case 'BIGINT':
 
-				# optional length
-				# optional unsigned
-				# optional zerofill
+				$this->parse_field_length($tokens, $f);
+				$this->parse_field_unsigned($tokens, $f);
+				$this->parse_field_zerofill($tokens, $f);
 				break;
 
 
@@ -497,9 +497,9 @@ class SQLParser{
 			case 'DOUBLE':
 			case 'FLOAT':
 
-				# optional length, 2 parts
-				# optional unsigned
-				# optional zerofill
+				$this->parse_field_length_decimals($tokens, $f);
+				$this->parse_field_unsigned($tokens, $f);
+				$this->parse_field_zerofill($tokens, $f);
 				break;
 
 
@@ -507,9 +507,10 @@ class SQLParser{
 			case 'DECIMAL':
 			case 'NUMERIC':
 
-				# optional length, 1 or 2 parts
-				# optional unsigned
-				# optional zerofill
+				$this->parse_field_length_decimals($tokens, $f);
+				$this->parse_field_length($tokens, $f);
+				$this->parse_field_unsigned($tokens, $f);
+				$this->parse_field_zerofill($tokens, $f);
 				break;
 
 
@@ -518,22 +519,30 @@ class SQLParser{
 			case 'BIT':
 			case 'BINARY':
 
-				# optional size
+				$this->parse_field_length($tokens, $f);
 				break;
 
 
 			# VARBINARY(length)
 			case 'VARBINARY':
 
-				# length
+				$this->parse_field_length($tokens, $f);
 				break;
 
 			# CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'CHAR':
+
+				$this->parse_field_length($tokens, $f);
+				# character set
+				# collate
 				break;
 
 			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
+
+				$this->parse_field_length($tokens, $f);
+				# character set
+				# collate
 				break;
 
 			# TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -544,12 +553,20 @@ class SQLParser{
 			case 'TEXT':
 			case 'MEDIUMTEXT':
 			case 'LONGTEXT':
+
+				# binary
+				# character set
+				# collate
 				break;
 
 			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 			# SET (value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'ENUM':
 			case 'SET':
+
+				# values
+				# character set
+				# collate
 				break;
 
 			default:
@@ -557,12 +574,23 @@ class SQLParser{
 		}
 
 
-		# [NOT NULL | NULL] [DEFAULT default_value]
-		#      [AUTO_INCREMENT] [UNIQUE [KEY] | [PRIMARY] KEY]
-		#      [COMMENT 'string']
-		#      [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
-		#      [STORAGE {DISK|MEMORY|DEFAULT}]
-		#      [reference_definition]
+		# [NOT NULL | NULL]
+		if (StrToUpper($tokens[0]) == 'NOT NULL'){
+			$f['null'] = false;
+			array_shift($tokens);
+		}
+		if (StrToUpper($tokens[0]) == 'NULL'){
+			$f['null'] = true;
+			array_shift($tokens);
+		}
+
+		# [DEFAULT default_value]
+		# [AUTO_INCREMENT]
+		# [UNIQUE [KEY] | [PRIMARY] KEY]
+		# [COMMENT 'string']
+		# [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+		# [STORAGE {DISK|MEMORY|DEFAULT}]
+		# [reference_definition]
 
 		$f['more'] = $tokens;
 
@@ -734,6 +762,47 @@ class SQLParser{
 
 	function parse_index_options(&$tokens, &$index){
 	}
+
+
+	#
+	# helper functions for parsing bits of field definitions
+	#
+
+	function parse_field_length(&$tokens, &$f){
+		if ($tokens[0] == '(' && $tokens[2] == ')'){
+			$f['length'] = $tokens[1];
+			array_shift($tokens);
+			array_shift($tokens);
+				array_shift($tokens);
+			}
+	}
+
+	function parse_field_length_deciamsl(&$tokens, &$f){
+		if ($tokens[0] == '(' && $tokens[2] == ',' && $tokens[4] == ')'){
+			$f['length'] = $tokens[1];
+			$f['decimals'] = $tokens[3];
+			array_shift($tokens);
+			array_shift($tokens);
+			array_shift($tokens);
+			array_shift($tokens);
+			array_shift($tokens);
+		}
+	}
+
+	function parse_field_unsigned(&$tokens, &$f){
+		if (StrToUpper($tokens[0]) == 'UNSIGNED'){
+			$f['unsigned'] = true;
+			array_shift($tokens);
+		}
+	}
+
+	function parse_field_zerofill(&$tokens, &$f){
+		if (StrToUpper($tokens[0]) == 'ZEROFILL'){
+			$f['zerofill'] = true;
+			array_shift($tokens);
+		}
+	}
+
 }
 
 
