@@ -748,19 +748,48 @@ class SQLParser{
 
 	function parse_index_columns(&$tokens, &$index){
 
+		# col_name [(length)] [ASC | DESC]
+
 		if ($tokens[0] != '(') return;
 		array_shift($tokens);
 
-		while ($tokens[0] != ')'){
+		while (true){
 
-			$index['cols'][] = $tokens[0];
+			$col = array(
+				'name' => $tokens[0],
+			);
 			array_shift($tokens);
 
-			if ($tokens[0] == ')') break;
-			if ($tokens[0] == ',') array_shift($tokens);
-		}
+			if ($tokens[0] == '(' && $tokens[2] == ')'){
+				$col['length'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
+				array_shift($tokens);
+			}
 
-		array_shift($tokens);
+			if (StrToUpper($tokens[0]) == 'ASC'){
+				$col['direction'] = 'asc';
+				array_shift($tokens);
+			}elseif (StrToUpper($tokens[0]) == 'DESC'){
+				$col['direction'] = 'desc';
+				array_shift($tokens);
+			}
+
+			$index['cols'][] = $col;
+
+			if ($tokens[0] == ')'){
+				array_shift($tokens);
+				return;
+			}
+
+			if ($tokens[0] == ','){
+				array_shift($tokens);
+				continue;
+			}
+
+			# hmm, an unexpected token
+			return;
+		}
 	}
 
 	function parse_index_options(&$tokens, &$index){
