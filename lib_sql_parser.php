@@ -742,7 +742,7 @@ class SQLParser{
 
 	function parse_index_type(&$tokens, &$index){
 		if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
-		if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'btree'; array_shift($tokens); }
+		if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'hash'; array_shift($tokens); }
 	}
 
 	function parse_index_columns(&$tokens, &$index){
