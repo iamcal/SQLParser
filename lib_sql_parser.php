@@ -685,6 +685,7 @@ class SQLParser{
 			'DEFAULT COLLATE',
 			'IF NOT EXISTS',
 			'NOT NULL',
+			'WITH PARSER',
 		);
 
 		$singles = array(
@@ -763,6 +764,25 @@ class SQLParser{
 	}
 
 	function parse_index_options(&$tokens, &$index){
+		# index_option:
+		#    KEY_BLOCK_SIZE [=] value
+		#  | index_type
+		#  | WITH PARSER parser_name
+
+		if ($tokens[0] == 'KEY_BLOCK_SIZE'){
+			array_shift($tokens);
+			if ($tokens[0] == '=') array_shift($tokens);
+			$index['key_block_size'] = $tokens[0];
+			array_shift($tokens);
+		}
+
+		$this->parse_index_type($tokens, $index);
+
+		if ($tokens[0] == 'WITH PARSER'){
+			$index['parser'] = $tokens[1];
+			array_shift($tokens);
+			array_shift($tokens);
+		}
 	}
 
 
