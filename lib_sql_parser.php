@@ -226,8 +226,9 @@ class SQLParser{
 			'fields'	=> $fields,
 			'indexes'	=> $indexes,
 			'props'		=> $props,
-			'more'		=> $tokens,
 		);
+
+		if (count($tokens)) $table['more'] = $tokens;
 
 		return $table;
 	}
@@ -343,10 +344,11 @@ class SQLParser{
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
-				$index['more'] = $tokens;
+
+				if (count($tokens)) $index['more'] = $tokens;
 				$indexes[] = $index;
 				return;
-		
+
 
 			#
 			# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
@@ -364,7 +366,7 @@ class SQLParser{
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
-				$index['more'] = $tokens;
+				if (count($tokens)) $index['more'] = $tokens;
 				$indexes[] = $index;
 				return;
 
@@ -403,7 +405,7 @@ class SQLParser{
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
-				$index['more'] = $tokens;
+				if (count($tokens)) $index['more'] = $tokens;
 				$indexes[] = $index;
 				return;
 
@@ -592,7 +594,7 @@ class SQLParser{
 		# [STORAGE {DISK|MEMORY|DEFAULT}]
 		# [reference_definition]
 
-		$f['more'] = $tokens;
+		if (count($tokens)) $f['more'] = $tokens;
 
 		return $f;
 	}
