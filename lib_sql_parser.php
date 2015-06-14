@@ -533,16 +533,16 @@ class SQLParser{
 			case 'CHAR':
 
 				$this->parse_field_length($tokens, $f);
-				# character set
-				# collate
+				$this->parse_field_charset($tokens, $f);
+				$this->parse_field_collate($tokens, $f);
 				break;
 
 			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
 
 				$this->parse_field_length($tokens, $f);
-				# character set
-				# collate
+				$this->parse_field_charset($tokens, $f);
+				$this->parse_field_collate($tokens, $f);
 				break;
 
 			# TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -555,8 +555,8 @@ class SQLParser{
 			case 'LONGTEXT':
 
 				# binary
-				# character set
-				# collate
+				$this->parse_field_charset($tokens, $f);
+				$this->parse_field_collate($tokens, $f);
 				break;
 
 			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -565,8 +565,8 @@ class SQLParser{
 			case 'SET':
 
 				# values
-				# character set
-				# collate
+				$this->parse_field_charset($tokens, $f);
+				$this->parse_field_collate($tokens, $f);
 				break;
 
 			default:
@@ -803,6 +803,21 @@ class SQLParser{
 		}
 	}
 
+	function parse_field_charset(&$tokens, &$f){
+		if (StrToUpper($tokens[0]) == 'CHARACTER SET'){
+			$f['character_set'] = $tokens[1];
+			array_shift($tokens);
+			array_shift($tokens);
+		}
+	}
+
+	function parse_field_collate(&$tokens, &$f){
+		if (StrToUpper($tokens[0]) == 'COLLATE'){
+			$f['collation'] = $tokens[1];
+			array_shift($tokens);
+			array_shift($tokens);
+		}
+	}
 }
 
 
