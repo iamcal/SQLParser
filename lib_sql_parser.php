@@ -770,9 +770,8 @@ class SQLParser{
 		while (true){
 
 			$col = array(
-				'name' => $tokens[0],
+				'name' => $this->decode_identifier(array_shift($tokens)),
 			);
-			array_shift($tokens);
 
 			if ($tokens[0] == '(' && $tokens[2] == ')'){
 				$col['length'] = $tokens[1];
