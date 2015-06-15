@@ -346,10 +346,8 @@ class SQLParser{
 
 				array_shift($tokens);
 
-				$name = null;
 				if ($tokens[0] != '(' && $tokens[0] != 'USING BTREE' && $tokens[0] != 'USING HASH'){
-					$name = $tokens[0];
-					array_shift($tokens);
+					$index['name'] = $this->decode_identifier(array_shift($tokens));
 				}
 
 				$this->parse_index_type($tokens, $index);
@@ -407,10 +405,8 @@ class SQLParser{
 
 				array_shift($tokens);
 
-				$name = null;
 				if ($tokens[0] != '('){
-					$name = $tokens[0];
-					array_shift($tokens);
+					$index['name'] = $this->decode_identifier(array_shift($tokens));
 				}
 
 				$this->parse_index_type($tokens, $index);
