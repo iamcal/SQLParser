@@ -95,7 +95,27 @@ class SQLParser{
 			# <national character string literal>
 			# <bit string literal>
 			# <hex string literal>
+
 			# <character string literal>
+			if ($sql[$pos] == "'" || $sql[$pos] == '"'){
+				$c = $pos+1;
+				$q = $sql[$pos];
+				while ($c < strlen($sql)){
+					if ($sql[$c] == '\\'){
+						$c += 2;
+						continue;
+					}
+					if ($sql[$c] == $q){
+						$slen = $c + 1 - $pos;
+						$tokens[] = substr($sql, $pos, $slen);
+						$pos += $slen;
+						break;
+					}
+					$c++;
+				}
+				continue;
+			}
+
 			# <date string>
 			# <time string>
 			# <timestamp string>
