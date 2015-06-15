@@ -602,6 +602,11 @@ class SQLParser{
 		}
 
 		# [AUTO_INCREMENT]
+		if (StrToUpper($tokens[0]) == 'AUTO_INCREMENT'){
+			$f['auto_increment'] = true;
+			array_shift($tokens);
+		}
+
 		# [UNIQUE [KEY] | [PRIMARY] KEY]
 		# [COMMENT 'string']
 		# [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
