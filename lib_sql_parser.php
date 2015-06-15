@@ -574,7 +574,7 @@ class SQLParser{
 			case 'ENUM':
 			case 'SET':
 
-				# values
+				$f['values'] = $this->parse_value_list($tokens);
 				$this->parse_field_charset($tokens, $f);
 				$this->parse_field_collate($tokens, $f);
 				break;
@@ -888,6 +888,33 @@ class SQLParser{
 		}
 	}
 
+	function parse_value_list(&$tokens){
+		if ($tokens[0] != '(') return null;
+		array_shift($tokens);
+
+		$values = array();
+		while (count($tokens)){
+
+			if ($tokens[0] == ')'){
+				array_shift($tokens);
+				return $values;
+			}
+
+			$values[] = $this->decode_value(array_shift($tokens));
+
+			if ($tokens[0] == ')'){
+				array_shift($tokens);
+				return $values;
+			}
+
+			if ($tokens[0] == ','){
+				array_shift($tokens);
+			}else{
+				# error
+				return $values;
+			}
+		}
+	}
 
 	function decode_identifier($token){
 		if ($token[0] == '`'){
