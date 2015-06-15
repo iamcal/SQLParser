@@ -207,7 +207,7 @@ class SQLParser{
 		# name
 		#
 
-		$name = $this->shift_field_name($tokens);
+		$name = $this->decode_identifier(array_shift($tokens));
 
 
 		#
@@ -216,7 +216,7 @@ class SQLParser{
 
 		if ($this->next_tokens($tokens, 'LIKE')){
 			array_shift($tokens);
-			$old_name = $this->shift_field_name($tokens);
+			$old_name = $this->decode_identifier(array_shift($tokens));
 
 			return array(
 				'name'	=> $name,
@@ -265,14 +265,6 @@ class SQLParser{
 			$i++;
 		}
 		return true;
-	}
-
-	function shift_field_name(&$tokens){
-		$name = array_shift($tokens);
-		if ($name{0} == '`'){
-			$name = substr($name, 1, -1);
-		}
-		return $name;
 	}
 
 	function parse_create_definition(&$tokens){
@@ -479,7 +471,7 @@ class SQLParser{
 	function parse_field($tokens){
 
 		$f = array(
-			'name'	=> $this->shift_field_name($tokens),
+			'name'	=> $this->decode_identifier(array_shift($tokens)),
 			'type'	=> StrToUpper(array_shift($tokens)),
 		);
 
@@ -607,6 +599,12 @@ class SQLParser{
 		}
 
 		# [DEFAULT default_value]
+		if (StrToUpper($tokens[0]) == 'DEFAULT'){
+			$f['default'] = $this->decode_value($tokens[1]);
+			array_shift($tokens);
+			array_shift($tokens);
+		}
+
 		# [AUTO_INCREMENT]
 		# [UNIQUE [KEY] | [PRIMARY] KEY]
 		# [COMMENT 'string']
@@ -888,6 +886,45 @@ class SQLParser{
 			array_shift($tokens);
 			array_shift($tokens);
 		}
+	}
+
+
+	function decode_identifier($token){
+		if ($token[0] == '`'){
+			return substr($token, 1, -1);
+		}
+		return $token;
+	}
+
+	function decode_value($token){
+
+		#
+		# decode strings
+		#
+
+		if ($token[0] == "'" || $token[0] == '"'){
+			$map = array(
+				'n'	=> "\n",
+				'r'	=> "\r",
+				't'	=> "\t",
+			);
+			$out = '';
+			for ($i=1; $i<strlen($token)-1; $i++){
+				if ($token[$i] == '\\'){
+					if ($map[$token[$i+1]]){
+						$out .= $map[$token[$i+1]];
+					}else{
+						$out .= $token[$i+1];
+					}
+					$i++;
+				}else{
+					$out .= $token[$i];
+				}
+			}
+			return $out;
+		}
+
+		return $token;
 	}
 }
 
