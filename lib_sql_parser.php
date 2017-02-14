@@ -482,7 +482,7 @@ class SQLParser{
 			case 'TINYBLOB':
 			case 'BLOB':
 			case 'MEDIUMBLOB':
-			case 'LONGDATE':
+			case 'LONGBLOB':
 
 				# nothing more to read
 				break;
