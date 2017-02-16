@@ -7,9 +7,9 @@
 
 	function collapse_test($in, $out){
 		$obj = new SQLParser();
-		is_deeply($obj->collapse_tokens($in), $out);
+		is_deeply($obj->lex($in), $out);
 	}
 
 
-	collapse_test(array('a', 'b'), array('a', 'b'));
-	collapse_test(array('UNIQUE', 'key'), array('UNIQUE KEY'));
+	collapse_test('a b', array('a', 'b'));
+	collapse_test('UNIQUE key', array('UNIQUE KEY'));

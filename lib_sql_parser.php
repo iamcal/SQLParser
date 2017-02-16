@@ -8,28 +8,38 @@ class SQLParser{
 
 	public $tokens = array();
 	public $tables = array();
+	public $source_map = array();
 
 	public function parse($sql){
 
-		$this->tokens = $this->lex($sql);
-		$ret = $this->walk($this->tokens);
+		// stashes tokens and source_map in $this
+		$this->lex($sql);
+		$ret = $this->walk($this->tokens, $sql, $this->source_map);
 
 		$this->tables = $ret['tables'];
 		return $this->tables;
 	}
 
-
+	#
+	# lex and collapse tokens
+	#
+	public function lex($sql) {
+		$this->source_map = $this->_lex($sql);
+		$this->tokens = $this->_extract_tokens($sql, $this->source_map);
+		return $this->tokens;
+	}
 
 	#
 	# simple lexer based on http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
 	#
+	# returns an array of [position, len] tuples for each token
 
-	public function lex($sql){
+	private function _lex($sql){
 
 		$pos = 0;
 		$len = strlen($sql);
 
-		$tokens = array();
+		$source_map = array();
 
 		while ($pos < $len){
 
@@ -64,7 +74,7 @@ class SQLParser{
 			# <regular identifier>
 			# <key word>
 			if (preg_match('![[:alpha:]][[:alnum:]_]*!A', $sql, $m, 0, $pos)){
-				$tokens[] = substr($sql, $pos, strlen($m[0]));
+				$source_map[] = [$pos, strlen($m[0])];
 				$pos += strlen($m[0]);
 				continue;
 			}
@@ -75,7 +85,7 @@ class SQLParser{
 				if ($p2 === false){
 					$pos = $len;
 				}else{
-					$tokens[] = substr($sql, $pos, 1+$p2-$pos);
+					$source_map[] = [$pos, 1+$p2-$pos];
 					$pos = $p2+1;
 				}
 				continue;
@@ -86,7 +96,7 @@ class SQLParser{
 			#	<period> <unsigned integer>
 			#	<unsigned integer> ::= <digit>...
 			if (preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $m, 0, $pos)){
-				$tokens[] = substr($sql, $pos, strlen($m[0]));
+				$source_map[] = [$pos, strlen($m[0])];
 				$pos += strlen($m[0]);
 				continue;
 			}
@@ -107,7 +117,7 @@ class SQLParser{
 					}
 					if ($sql[$c] == $q){
 						$slen = $c + 1 - $pos;
-						$tokens[] = substr($sql, $pos, $slen);
+						$source_map[] = [$pos, $slen];
 						$pos += $slen;
 						break;
 					}
@@ -129,36 +139,45 @@ class SQLParser{
 			# <double period>
 			# <left bracket>
 			# <right bracket>
-
-			$tokens[] = substr($sql, $pos, 1);
+			$source_map[] = [$pos, 1];
 			$pos++;
 		}
 
-		return $tokens;
+		return $source_map;
 	}
 
 
-	function walk($tokens){
+	function walk($tokens, $sql, $source_map){
 
 
 		#
 		# split into statements
 		#
 
-		$tokens = $this->collapse_tokens($tokens);
-
 		$statements = array();
 		$temp = array();
-		foreach ($tokens as $t){
+		$start = 0;
+		for ($i = 0; $i < count($tokens); $i++) {
+			$t = $tokens[$i];
 			if ($t == ';'){
-				if (count($temp)) $statements[] = $temp;
+				if (count($temp)) {
+					$statements[] = array(
+						"tuples" => $temp,
+						"sql" => substr($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]),
+					);
+				}
 				$temp = array();
+				$start = $i + 1;
 			}else{
 				$temp[] = $t;
 			}
 		}
-		if (count($temp)) $statements[] = $temp;
-
+		if (count($temp)) {
+			$statements[] = array(
+				"tuples" => $temp,
+				"sql" => substr($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]),
+			);
+		}
 
 		#
 		# find CREATE TABLE statements
@@ -166,23 +185,26 @@ class SQLParser{
 
 		$tables = array();
 
-		foreach ($statements as $s){
+		foreach ($statements as $stmt){
+			$s = $stmt['tuples'];
 
-			if ($s[0] == 'CREATE TABLE'){
+			if (StrToUpper($s[0]) == 'CREATE TABLE'){
 
 				array_shift($s);
 
 				$table = $this->parse_create_table($s);
+				$table['sql'] = $stmt['sql'];
 				$tables[$table['name']] = $table;
 			}
 
-			if ($s[0] == 'CREATE TEMPORARY TABLE'){
+			if (StrToUpper($s[0]) == 'CREATE TEMPORARY TABLE'){
 
 				array_shift($s);
 
 				$table = $this->parse_create_table($s);
 				$table['props']['temp'] = true;
 				$tables[$table['name']] = $table;
+				$table['sql'] = $stmt['sql'];
 			}
 
 			if ($GLOBALS['_find_single_table'] && count($tables)) return array(
@@ -239,7 +261,6 @@ class SQLParser{
 		}
 
 		$props = $this->parse_table_props($tokens);
-
 
 		$table = array(
 			'name'		=> $name,
@@ -675,14 +696,13 @@ class SQLParser{
 	}
 
 
-
-	# We can simplify parsing by merging certain tokens when
+	# Given the source map, extract the tokens from the original sql,
+	# Along the way, simplify parsing by merging certain tokens when
 	# they occur next to each other. MySQL treats these productions
 	# equally: 'UNIQUE|UNIQUE INDEX|UNIQUE KEY' and if they are
 	# all always a single token it makes parsing easier.
 
-	function collapse_tokens($tokens){
-
+	function _extract_tokens($sql, &$source_map){
 		$lists = array(
 			'FULLTEXT INDEX',
 			'FULLTEXT KEY',
@@ -725,38 +745,51 @@ class SQLParser{
 		foreach ($singles as $s) $smap[$s] = 1;
 
 		$out = array();
+		$out_map = [];
+
 		$i = 0;
-		$len = count($tokens);
+		$len = count($source_map);
 		while ($i < $len){
-			$next = StrToUpper($tokens[$i]);
-			if (is_array($maps[$next])){
+			$token = substr($sql, $source_map[$i][0], $source_map[$i][1]);
+			$tokenUpper = StrToUpper($token);
+			if (is_array($maps[$tokenUpper])){
 				$found = false;
-				foreach ($maps[$next] as $list){
+				foreach ($maps[$tokenUpper] as $list){
 					$fail = false;
 					foreach ($list as $k => $v){
-						if ($v != StrToUpper($tokens[$k+$i])){
+						$next = StrToUpper(substr($sql, $source_map[$k+$i][0], $source_map[$k+$i][1]));
+						if ($v != $next){
 							$fail = true;
 							break;
 						}
 					}
 					if (!$fail){
-						$i += count($list);
 						$out[] = implode(' ', $list);
+
+						# Extend the length of the first token to include everything
+						# up through the last in the sequence.
+						$j = $i + count($list) - 1;
+						$out_map[] = array($source_map[$i][0], ($source_map[$j][0] - $source_map[$i][0]) + $source_map[$j][1]);
+
+						$i = $j + 1;
 						$found = true;
 						break;
 					}
 				}
 				if ($found) continue;
 			}
-			if ($smap[$next]){
-				$out[] = $next;
+			if ($smap[$tokenUpper]){
+				$out[] = $tokenUpper;
+				$out_map[]= $source_map[$i];
 				$i++;
 				continue;
 			}
-			$out[] = $tokens[$i];
+			$out[] = $token;
+			$out_map[]= $source_map[$i];
 			$i++;
 		}
 
+		$source_map = $out_map;
 		return $out;
 	}
 
