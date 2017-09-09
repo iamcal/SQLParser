@@ -794,8 +794,10 @@ class SQLParser{
 	}
 
 	function parse_index_type(&$tokens, &$index){
-		if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
-		if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'hash'; array_shift($tokens); }
+		if (count($tokens) >= 1){
+			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
+			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'hash'; array_shift($tokens); }
+		}
 	}
 
 	function parse_index_columns(&$tokens, &$index){
@@ -849,19 +851,23 @@ class SQLParser{
 		#  | index_type
 		#  | WITH PARSER parser_name
 
-		if ($tokens[0] == 'KEY_BLOCK_SIZE'){
-			array_shift($tokens);
-			if ($tokens[0] == '=') array_shift($tokens);
-			$index['key_block_size'] = $tokens[0];
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if ($tokens[0] == 'KEY_BLOCK_SIZE'){
+				array_shift($tokens);
+				if ($tokens[0] == '=') array_shift($tokens);
+				$index['key_block_size'] = $tokens[0];
+				array_shift($tokens);
+			}
 		}
 
 		$this->parse_index_type($tokens, $index);
 
-		if ($tokens[0] == 'WITH PARSER'){
-			$index['parser'] = $tokens[1];
-			array_shift($tokens);
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if ($tokens[0] == 'WITH PARSER'){
+				$index['parser'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
+			}
 		}
 	}
 
@@ -881,7 +887,7 @@ class SQLParser{
 		}
 	}
 
-	function parse_field_length_deciamsl(&$tokens, &$f){
+	function parse_field_length_decimals(&$tokens, &$f){
 		if (count($tokens) >= 5){
 			if ($tokens[0] == '(' && $tokens[2] == ',' && $tokens[4] == ')'){
 				$f['length'] = $tokens[1];
