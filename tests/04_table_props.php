@@ -5,7 +5,8 @@
 	function table_props_test($tokens, $props_expect){
 
 		$obj = new SQLParser();
-		$props = $obj->parse_table_props($tokens);
+		$i = 0;
+		$props = $obj->parse_table_props($tokens, $i);
 
 		is_deeply($props, $props_expect);
 	}
