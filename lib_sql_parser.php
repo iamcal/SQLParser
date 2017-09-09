@@ -190,18 +190,14 @@ class SQLParser{
 
 			if (StrToUpper($s[0]) == 'CREATE TABLE'){
 
-				array_shift($s);
-
-				$table = $this->parse_create_table($s);
+				$table = $this->parse_create_table($s, 1, count($s));
 				$table['sql'] = $stmt['sql'];
 				$tables[$table['name']] = $table;
 			}
 
 			if (StrToUpper($s[0]) == 'CREATE TEMPORARY TABLE'){
 
-				array_shift($s);
-
-				$table = $this->parse_create_table($s);
+				$table = $this->parse_create_table($s, 1, count($s));
 				$table['props']['temp'] = true;
 				$tables[$table['name']] = $table;
 				$table['sql'] = $stmt['sql'];
@@ -218,10 +214,10 @@ class SQLParser{
 	}
 
 
-	function parse_create_table($tokens){
+	function parse_create_table($tokens, $i, $num){
 
-		if ($tokens[0] == 'IF NOT EXISTS'){
-			array_shift($tokens);
+		if ($tokens[$i] == 'IF NOT EXISTS'){
+			$i++;
 		}
 
 
@@ -229,16 +225,16 @@ class SQLParser{
 		# name
 		#
 
-		$name = $this->decode_identifier(array_shift($tokens));
+		$name = $this->decode_identifier($tokens[$i++]);
 
 
 		#
 		# CREATE TABLE x LIKE y
 		#
 
-		if ($this->next_tokens($tokens, 'LIKE')){
-			array_shift($tokens);
-			$old_name = $this->decode_identifier(array_shift($tokens));
+		if ($this->next_tokens($tokens, $i, 'LIKE')){
+			$i++;
+			$old_name = $this->decode_identifier($tokens[$i++]);
 
 			return array(
 				'name'	=> $name,
@@ -252,15 +248,16 @@ class SQLParser{
 		#
 
 		$fields = array();
+		$indexes = array();
 
-		if ($this->next_tokens($tokens, '(')){
-			array_shift($tokens);
-			$ret = $this->parse_create_definition($tokens);
+		if ($this->next_tokens($tokens, $i, '(')){
+			$i++;
+			$ret = $this->parse_create_definition($tokens, $i);
 			$fields = $ret['fields'];
 			$indexes = $ret['indexes'];
 		}
 
-		$props = $this->parse_table_props($tokens);
+		$props = $this->parse_table_props($tokens, $i);
 
 		$table = array(
 			'name'		=> $name,
@@ -269,38 +266,38 @@ class SQLParser{
 			'props'		=> $props,
 		);
 
-		if (count($tokens)) $table['more'] = $tokens;
+		if ($i <= count($tokens)) $table['more'] = array_slice($tokens, $i);
 
 		return $table;
 	}
 
 
-	function next_tokens($tokens){
+	function next_tokens($tokens, $i){
 
 		$args = func_get_args();
 		array_shift($args);
+		array_shift($args);
 
-		$i = 0;
 		foreach ($args as $v){
-			if (StrToUpper($tokens[$i]) != $v)return false;
+			if (StrToUpper($tokens[$i]) != $v) return false;
 			$i++;
 		}
 		return true;
 	}
 
-	function parse_create_definition(&$tokens){
+	function parse_create_definition($tokens, &$i){
 
 		$fields = array();
 		$indexes = array();
 
-		while ($tokens[0] != ')'){
+		while ($tokens[$i] != ')'){
 
-			$these_tokens = $this->slice_until_next_field($tokens);
+			$these_tokens = $this->slice_until_next_field($tokens, $i);
 
 			$this->parse_field_or_key($these_tokens, $fields, $indexes);
 		}
 
-		array_shift($tokens); # closing paren
+		$i++;
 
 		return array(
 			'fields'	=> $fields,
@@ -453,32 +450,32 @@ class SQLParser{
 		$fields[] = $this->parse_field($tokens);
 	}
 
-	function slice_until_next_field(&$tokens){
+	function slice_until_next_field($tokens, &$i){
 
 		$out = array();
 		$stack = 0;
 
-		while (count($tokens)){
-			$next = $tokens[0];
+		while ($i <= count($tokens)){
+			$next = $tokens[$i];
 			if ($next == '('){
 				$stack++;
-				$out[] = array_shift($tokens);
+				$out[] = $tokens[$i++];
 			}elseif ($next == ')'){
 				if ($stack){
 					$stack--;
-					$out[] = array_shift($tokens);
+					$out[] = $tokens[$i++];
 				}else{
 					return $out;
 				}
 			}elseif ($next == ','){
 				if ($stack){
-					$out[] = array_shift($tokens);
+					$out[] = $tokens[$i++];
 				}else{
-					array_shift($tokens);
+					$i++;
 					return $out;
 				}
 			}else{
-				$out[] = array_shift($tokens);
+				$out[] = $tokens[$i++];
 			}
 		}
 
@@ -639,7 +636,7 @@ class SQLParser{
 		return $f;
 	}
 
-	function parse_table_props(&$tokens){
+	function parse_table_props($tokens, &$i){
 
 		$alt_names = array(
 			'CHARACTER SET'		=> 'CHARSET',
@@ -650,9 +647,9 @@ class SQLParser{
 
 		$props = array();
 
-		while (count($tokens)){
+		while ($i < count($tokens)){
 
-		switch (StrToUpper($tokens[0])){
+		switch (StrToUpper($tokens[$i])){
 			case 'ENGINE':
 			case 'AUTO_INCREMENT':
 			case 'AVG_ROW_LENGTH':
@@ -671,20 +668,20 @@ class SQLParser{
 			case 'CHARSET':
 			case 'DATA DIRECTORY':
 			case 'INDEX DIRECTORY':
-				$prop = StrToUpper(array_shift($tokens));
-				if (isset($tokens[0]) && $tokens[0] == '=') array_shift($tokens);
-				$props[$prop] = array_shift($tokens);
-				if (isset($tokens[0]) && $tokens[0] == ',') array_shift($tokens);
+				$prop = StrToUpper($tokens[$i++]);
+				if (isset($tokens[$i]) && $tokens[$i] == '=') $i++;
+				$props[$prop] = $tokens[$i++];
+				if (isset($tokens[$i]) && $tokens[$i] == ',') $i++;
 				break;
 
 			case 'CHARACTER SET':
 			case 'DEFAULT COLLATE':
 			case 'DEFAULT CHARACTER SET':
 			case 'DEFAULT CHARSET':
-				$prop = $alt_names[StrToUpper(array_shift($tokens))];
-				if (isset($tokens[0]) && $tokens[0] == '=') array_shift($tokens);
-				$props[$prop] = array_shift($tokens);
-				if (isset($tokens[0]) && $tokens[0] == ',') array_shift($tokens);
+				$prop = $alt_names[StrToUpper($tokens[$i++])];
+				if (isset($tokens[$i]) && $tokens[$i] == '=') $i++;
+				$props[$prop] = $tokens[$i++];
+				if (isset($tokens[$i]) && $tokens[$i] == ',') $i++;
 				break;
 
 			default:
