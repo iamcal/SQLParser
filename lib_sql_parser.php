@@ -207,7 +207,7 @@ class SQLParser{
 				$table['sql'] = $stmt['sql'];
 			}
 
-			if ($GLOBALS['_find_single_table'] && count($tables)) return array(
+			if (isset($GLOBALS['_find_single_table']) && $GLOBALS['_find_single_table'] && count($tables)) return array(
 				'tables' => $tables,
 			);
 		}
@@ -606,24 +606,24 @@ class SQLParser{
 
 
 		# [NOT NULL | NULL]
-		if (StrToUpper($tokens[0]) == 'NOT NULL'){
+		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'NOT NULL'){
 			$f['null'] = false;
 			array_shift($tokens);
 		}
-		if (StrToUpper($tokens[0]) == 'NULL'){
+		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'NULL'){
 			$f['null'] = true;
 			array_shift($tokens);
 		}
 
 		# [DEFAULT default_value]
-		if (StrToUpper($tokens[0]) == 'DEFAULT'){
+		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'DEFAULT'){
 			$f['default'] = $this->decode_value($tokens[1]);
 			array_shift($tokens);
 			array_shift($tokens);
 		}
 
 		# [AUTO_INCREMENT]
-		if (StrToUpper($tokens[0]) == 'AUTO_INCREMENT'){
+		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'AUTO_INCREMENT'){
 			$f['auto_increment'] = true;
 			array_shift($tokens);
 		}
@@ -672,9 +672,9 @@ class SQLParser{
 			case 'DATA DIRECTORY':
 			case 'INDEX DIRECTORY':
 				$prop = StrToUpper(array_shift($tokens));
-				if ($tokens[0] == '=') array_shift($tokens);
+				if (isset($tokens[0]) && $tokens[0] == '=') array_shift($tokens);
 				$props[$prop] = array_shift($tokens);
-				if ($tokens[0] == ',') array_shift($tokens);
+				if (isset($tokens[0]) && $tokens[0] == ',') array_shift($tokens);
 				break;
 
 			case 'CHARACTER SET':
@@ -682,9 +682,9 @@ class SQLParser{
 			case 'DEFAULT CHARACTER SET':
 			case 'DEFAULT CHARSET':
 				$prop = $alt_names[StrToUpper(array_shift($tokens))];
-				if ($tokens[0] == '=') array_shift($tokens);
+				if (isset($tokens[0]) && $tokens[0] == '=') array_shift($tokens);
 				$props[$prop] = array_shift($tokens);
-				if ($tokens[0] == ',') array_shift($tokens);
+				if (isset($tokens[0]) && $tokens[0] == ',') array_shift($tokens);
 				break;
 
 			default:
@@ -752,7 +752,7 @@ class SQLParser{
 		while ($i < $len){
 			$token = substr($sql, $source_map[$i][0], $source_map[$i][1]);
 			$tokenUpper = StrToUpper($token);
-			if (is_array($maps[$tokenUpper])){
+			if (isset($maps[$tokenUpper]) && is_array($maps[$tokenUpper])){
 				$found = false;
 				foreach ($maps[$tokenUpper] as $list){
 					$fail = false;
@@ -778,7 +778,7 @@ class SQLParser{
 				}
 				if ($found) continue;
 			}
-			if ($smap[$tokenUpper]){
+			if (isset($smap[$tokenUpper])){
 				$out[] = $tokenUpper;
 				$out_map[]= $source_map[$i];
 				$i++;
@@ -871,53 +871,65 @@ class SQLParser{
 	#
 
 	function parse_field_length(&$tokens, &$f){
-		if ($tokens[0] == '(' && $tokens[2] == ')'){
-			$f['length'] = $tokens[1];
-			array_shift($tokens);
-			array_shift($tokens);
+		if (count($tokens) >= 3){
+			if ($tokens[0] == '(' && $tokens[2] == ')'){
+				$f['length'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
 				array_shift($tokens);
 			}
+		}
 	}
 
 	function parse_field_length_deciamsl(&$tokens, &$f){
-		if ($tokens[0] == '(' && $tokens[2] == ',' && $tokens[4] == ')'){
-			$f['length'] = $tokens[1];
-			$f['decimals'] = $tokens[3];
-			array_shift($tokens);
-			array_shift($tokens);
-			array_shift($tokens);
-			array_shift($tokens);
-			array_shift($tokens);
+		if (count($tokens) >= 5){
+			if ($tokens[0] == '(' && $tokens[2] == ',' && $tokens[4] == ')'){
+				$f['length'] = $tokens[1];
+				$f['decimals'] = $tokens[3];
+				array_shift($tokens);
+				array_shift($tokens);
+				array_shift($tokens);
+				array_shift($tokens);
+				array_shift($tokens);
+			}
 		}
 	}
 
 	function parse_field_unsigned(&$tokens, &$f){
-		if (StrToUpper($tokens[0]) == 'UNSIGNED'){
-			$f['unsigned'] = true;
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if (StrToUpper($tokens[0]) == 'UNSIGNED'){
+				$f['unsigned'] = true;
+				array_shift($tokens);
+			}
 		}
 	}
 
 	function parse_field_zerofill(&$tokens, &$f){
-		if (StrToUpper($tokens[0]) == 'ZEROFILL'){
-			$f['zerofill'] = true;
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if (StrToUpper($tokens[0]) == 'ZEROFILL'){
+				$f['zerofill'] = true;
+				array_shift($tokens);
+			}
 		}
 	}
 
 	function parse_field_charset(&$tokens, &$f){
-		if (StrToUpper($tokens[0]) == 'CHARACTER SET'){
-			$f['character_set'] = $tokens[1];
-			array_shift($tokens);
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if (StrToUpper($tokens[0]) == 'CHARACTER SET'){
+				$f['character_set'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
+			}
 		}
 	}
 
 	function parse_field_collate(&$tokens, &$f){
-		if (StrToUpper($tokens[0]) == 'COLLATE'){
-			$f['collation'] = $tokens[1];
-			array_shift($tokens);
-			array_shift($tokens);
+		if (count($tokens) >= 1){
+			if (StrToUpper($tokens[0]) == 'COLLATE'){
+				$f['collation'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
+			}
 		}
 	}
 
