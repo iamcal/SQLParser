@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="src/SQLParser.php" verbose="true" testdox="true">
+	<testsuites>
+		<testsuite name="unit">
+			<directory>tests</directory>
+		</testsuite>
+	</testsuites>
+	<logging>
+		<log type="coverage-clover" target="clover.xml"/>
+	</logging>
+</phpunit>
