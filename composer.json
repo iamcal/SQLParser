@@ -1,0 +1,17 @@
+{
+	"name": "iamcal/SQLParser",
+	"description": "MySQL schema parser",
+	"type": "library",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Cal Henderson",
+			"email": "cal@iamcal.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"iamcal//" : "src"
+		}
+	}
+}
