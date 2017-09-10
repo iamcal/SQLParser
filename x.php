@@ -2,7 +2,9 @@
 	ini_set('display_errors', 1);
 	error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
-	include('lib_sql_parser.php');
+	include('src/SQLParser.php');
+
+	use iamcal\SQLParser;
 
 $sql = <<<EOD
 CREATE TABLE `mentions` (

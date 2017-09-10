@@ -1,5 +1,8 @@
 <?php
-	include('lib_sql_parser.php');
+	include('src/SQLParser.php');
+
+	use iamcal\SQLParser;
+
 
 	$sql = file_get_contents('data/glitch_main.sql');
 
