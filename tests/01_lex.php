@@ -1,9 +1,9 @@
 <?php
 	include(dirname(__FILE__).'/testmore.php');
-	include(dirname(__FILE__).'/../lib_sql_parser.php');
+	include(dirname(__FILE__).'/../src/SQLParser.php');
 
 	function lex_test($str, $tokens){
-		$obj = new SQLParser();
+		$obj = new iamcal\SQLParser();
 
 		is_deeply($obj->lex($str), $tokens);
 	}
