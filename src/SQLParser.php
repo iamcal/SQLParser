@@ -849,37 +849,43 @@ class SQLParser{
 	}
 
 	function parse_index_options(&$tokens, &$index){
+
 		# index_option:
 		#    KEY_BLOCK_SIZE [=] value
 		#  | index_type
 		#  | WITH PARSER parser_name
 		#  | COMMENT 'string'
 
-		if (count($tokens) >= 1){
+		while (count($tokens) >= 1){
+
 			if ($tokens[0] == 'KEY_BLOCK_SIZE'){
 				array_shift($tokens);
 				if ($tokens[0] == '=') array_shift($tokens);
 				$index['key_block_size'] = $tokens[0];
 				array_shift($tokens);
+				continue;
 			}
-		}
 
-		$this->parse_index_mode($tokens, $index);
-
-		if (count($tokens) >= 1){
 			if ($tokens[0] == 'WITH PARSER'){
 				$index['parser'] = $tokens[1];
 				array_shift($tokens);
 				array_shift($tokens);
+				continue;
 			}
-		}
 
-		if (count($tokens) >= 1){
 			if ($tokens[0] == 'COMMENT'){
 				$index['comment'] = $this->decode_value($tokens[1]);
 				array_shift($tokens);
 				array_shift($tokens);
+				continue;
 			}
+
+			if (!isset($index['mode'])){
+				$this->parse_index_mode($tokens, $index);
+				if (isset($index['mode'])) continue;
+			}
+
+			break;
 		}
 	}
 

@@ -155,6 +155,13 @@
 			# comment
 			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) COMMENT \"hello world\")");
 			$this->assertEquals($tbl['indexes'][0]['comment'], "hello world");
+
+			# everything
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) COMMENT \"hello world\" USING HASH KEY_BLOCK_SIZE=4 WITH PARSER foo)");
+			$this->assertEquals($tbl['indexes'][0]['comment'], "hello world");
+			$this->assertEquals($tbl['indexes'][0]['mode'], "HASH");
+			$this->assertEquals($tbl['indexes'][0]['key_block_size'], "4");
+			$this->assertEquals($tbl['indexes'][0]['parser'], "foo");
 		}
 
 		function get_first_table($str){
