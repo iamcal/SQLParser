@@ -374,7 +374,7 @@ class SQLParser{
 					$index['name'] = $this->decode_identifier(array_shift($tokens));
 				}
 
-				$this->parse_index_type($tokens, $index);
+				$this->parse_index_mode($tokens, $index);
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
@@ -396,7 +396,7 @@ class SQLParser{
 
 				array_shift($tokens);
 
-				$this->parse_index_type($tokens, $index);
+				$this->parse_index_mode($tokens, $index);
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
@@ -433,7 +433,7 @@ class SQLParser{
 					$index['name'] = $this->decode_identifier(array_shift($tokens));
 				}
 
-				$this->parse_index_type($tokens, $index);
+				$this->parse_index_mode($tokens, $index);
 				$this->parse_index_columns($tokens, $index);
 				$this->parse_index_options($tokens, $index);
 
@@ -796,10 +796,10 @@ class SQLParser{
 		return $out;
 	}
 
-	function parse_index_type(&$tokens, &$index){
+	function parse_index_mode(&$tokens, &$index){
 		if (count($tokens) >= 1){
-			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
-			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'hash'; array_shift($tokens); }
+			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'BTREE'; array_shift($tokens); }
+			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'HASH'; array_shift($tokens); }
 		}
 	}
 
@@ -863,7 +863,7 @@ class SQLParser{
 			}
 		}
 
-		$this->parse_index_type($tokens, $index);
+		$this->parse_index_mode($tokens, $index);
 
 		if (count($tokens) >= 1){
 			if ($tokens[0] == 'WITH PARSER'){
