@@ -47,4 +47,26 @@
 
 
 		# TODO: case conversion, multiple options, optional commas
+
+
+		function get_first_table($str){
+			$obj = new iamcal\SQLParser();
+			$obj->parse($str);
+
+			$tables = array_keys($obj->tables);
+			$first_key = $tables[0];
+
+			return $obj->tables[$first_key];
+		}
+
+		function testGeneralCreation(){
+
+			$tbl = $this->get_first_table("CREATE TABLE foo");
+			$this->assertEquals($tbl['name'], "foo");
+			$this->assertEquals(array_key_exists('temporary', $tbl['props']), false);
+
+			$tbl = $this->get_first_table("CREATE TEMPORARY TABLE foo");
+			$this->assertEquals($tbl['name'], "foo");
+			$this->assertEquals($tbl['props']['temporary'], true);
+		}
 	}
