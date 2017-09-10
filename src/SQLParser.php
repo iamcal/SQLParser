@@ -175,7 +175,6 @@ class SQLParser{
 			}
 		}
 		if (count($temp)) {
-
 			$statements[] = array(
 				"tuples" => $temp,
 				"sql" => substr($sql, $source_map[$start][0], $source_map[$i-1][0] - $source_map[$start][0] + $source_map[$i-1][1]),
@@ -296,9 +295,10 @@ class SQLParser{
 
 		while ($tokens[$i] != ')'){
 
-			$these_tokens = $this->slice_until_next_field($tokens, $i);
+			$start = $i;
+			$end = $this->find_next_field($tokens, $i);
 
-			$this->parse_field_or_key($these_tokens, $fields, $indexes);
+			$this->parse_field_or_key($tokens, $start, $end, $fields, $indexes);
 		}
 
 		$i++;
@@ -309,7 +309,7 @@ class SQLParser{
 		);
 	}
 
-	function parse_field_or_key(&$tokens, &$fields, &$indexes){
+	function parse_field_or_key($tokens, $i, $max, &$fields, &$indexes){
 
 		#
 		# parse a single create_definition
@@ -323,24 +323,24 @@ class SQLParser{
 		# constraints can come before a few different things
 		#
 
-		if ($tokens[0] == 'CONSTRAINT'){
+		if ($tokens[$i] == 'CONSTRAINT'){
 
 			$has_constraint = true;
 
-			if ($tokens[1] == 'PRIMARY KEY'
-				|| $tokens[1] == 'UNIQUE'
-				|| $tokens[1] == 'UNIQUE KEY'
-				|| $tokens[1] == 'UNIQUE INDEX'
-				|| $tokens[1] == 'FOREIGN KEY'){
-				array_shift($tokens);
+			if ($tokens[$i+1] == 'PRIMARY KEY'
+				|| $tokens[$i+1] == 'UNIQUE'
+				|| $tokens[$i+1] == 'UNIQUE KEY'
+				|| $tokens[$i+1] == 'UNIQUE INDEX'
+				|| $tokens[$i+1] == 'FOREIGN KEY'){
+				$i++;
 			}else{
-				array_shift($tokens);
-				$constraint = array_shift($tokens);
+				$i++;
+				$constraint = $tokens[$i++];
 			}
 		}
 
 
-		switch ($tokens[0]){
+		switch ($tokens[$i]){
 
 			#
 			# named indexes
@@ -362,22 +362,22 @@ class SQLParser{
 					'type' => 'INDEX',
 				);
 
-				if ($tokens[0] == 'UNIQUE'	) $index['type'] = 'UNIQUE';
-				if ($tokens[0] == 'UNIQUE INDEX') $index['type'] = 'UNIQUE';
-				if ($tokens[0] == 'UNIQUE KEY'	) $index['type'] = 'UNIQUE';
+				if ($tokens[$i] == 'UNIQUE'	 ) $index['type'] = 'UNIQUE';
+				if ($tokens[$i] == 'UNIQUE INDEX') $index['type'] = 'UNIQUE';
+				if ($tokens[$i] == 'UNIQUE KEY'	 ) $index['type'] = 'UNIQUE';
 
-				array_shift($tokens);
+				$i++;
 
-				if ($tokens[0] != '(' && $tokens[0] != 'USING BTREE' && $tokens[0] != 'USING HASH'){
-					$index['name'] = $this->decode_identifier(array_shift($tokens));
+				if ($tokens[$i] != '(' && $tokens[$i] != 'USING BTREE' && $tokens[$i] != 'USING HASH'){
+					$index['name'] = $this->decode_identifier($tokens[$i++]);
 				}
 
-				$this->parse_index_type($tokens, $index);
-				$this->parse_index_columns($tokens, $index);
-				$this->parse_index_options($tokens, $index);
+				$this->parse_index_type($tokens, $i, $max, $index);
+				$this->parse_index_columns($tokens, $i, $index);
+				$this->parse_index_options($tokens, $i, $max, $index);
 
 
-				if (count($tokens)) $index['more'] = $tokens;
+				if ($i < $max) $index['more'] = array_slice($tokens, $i, $max-$i);
 				$indexes[] = $index;
 				return;
 
@@ -392,13 +392,13 @@ class SQLParser{
 					'type'	=> 'PRIMARY',
 				);
 
-				array_shift($tokens);
+				$i++;
 
-				$this->parse_index_type($tokens, $index);
-				$this->parse_index_columns($tokens, $index);
-				$this->parse_index_options($tokens, $index);
+				$this->parse_index_type($tokens, $i, $max, $index);
+				$this->parse_index_columns($tokens, $i, $index);
+				$this->parse_index_options($tokens, $i, $max, $index);
 
-				if (count($tokens)) $index['more'] = $tokens;
+				if ($i < $max) $index['more'] = array_slice($tokens, $i, $max-$i);
 				$indexes[] = $index;
 				return;
 
@@ -421,21 +421,21 @@ class SQLParser{
 					'type' => 'FULLTEXT',
 				);
 
-				if ($tokens[0] == 'SPATIAL'	) $index['type'] = 'SPATIAL';
-				if ($tokens[0] == 'SPATIAL INDEX') $index['type'] = 'SPATIAL';
-				if ($tokens[0] == 'SPATIAL KEY'	) $index['type'] = 'SPATIAL';
+				if ($tokens[$i] == 'SPATIAL'      ) $index['type'] = 'SPATIAL';
+				if ($tokens[$i] == 'SPATIAL INDEX') $index['type'] = 'SPATIAL';
+				if ($tokens[$i] == 'SPATIAL KEY'  ) $index['type'] = 'SPATIAL';
 
-				array_shift($tokens);
+				$i++;
 
-				if ($tokens[0] != '('){
-					$index['name'] = $this->decode_identifier(array_shift($tokens));
+				if ($tokens[$i] != '('){
+					$index['name'] = $this->decode_identifier($tokens[$i++]);
 				}
 
-				$this->parse_index_type($tokens, $index);
-				$this->parse_index_columns($tokens, $index);
-				$this->parse_index_options($tokens, $index);
+				$this->parse_index_type($tokens, $i, $max, $index);
+				$this->parse_index_columns($tokens, $i, $index);
+				$this->parse_index_options($tokens, $i, $max, $index);
 
-				if (count($tokens)) $index['more'] = $tokens;
+				if ($i < $max) $index['more'] = array_slice($tokens, $i, $max-$i);
 				$indexes[] = $index;
 				return;
 
@@ -446,51 +446,50 @@ class SQLParser{
 
 				$fields[] = array(
 					'_'		=> 'CHECK',
-					'tokens'	=> $tokens,
+					'tokens'	=> array_slice($tokens, $i, $max-$i),
 				);
 				return;
 		}
 
-		$fields[] = $this->parse_field($tokens);
+		$fields[] = $this->parse_field($tokens, $i, $max);
 	}
 
-	function slice_until_next_field($tokens, &$i){
+	function find_next_field($tokens, &$i){
 
-		$out = array();
 		$stack = 0;
 
 		while ($i <= count($tokens)){
 			$next = $tokens[$i];
 			if ($next == '('){
 				$stack++;
-				$out[] = $tokens[$i++];
+				$i++;
 			}elseif ($next == ')'){
 				if ($stack){
 					$stack--;
-					$out[] = $tokens[$i++];
+					$i++;
 				}else{
-					return $out;
+					return $i;
 				}
 			}elseif ($next == ','){
 				if ($stack){
-					$out[] = $tokens[$i++];
+					$i++;
 				}else{
 					$i++;
-					return $out;
+					return $i-1;
 				}
 			}else{
-				$out[] = $tokens[$i++];
+				$i++;
 			}
 		}
 
-		return $out;
+		return $i;
 	}
 
-	function parse_field($tokens){
+	function parse_field($tokens, &$i, $max){
 
 		$f = array(
-			'name'	=> $this->decode_identifier(array_shift($tokens)),
-			'type'	=> StrToUpper(array_shift($tokens)),
+			'name'	=> $this->decode_identifier($tokens[$i++]),
+			'type'	=> StrToUpper($tokens[$i++]),
 		);
 
 		switch ($f['type']){
@@ -518,9 +517,9 @@ class SQLParser{
 			case 'INTEGER':
 			case 'BIGINT':
 
-				$this->parse_field_length($tokens, $f);
-				$this->parse_field_unsigned($tokens, $f);
-				$this->parse_field_zerofill($tokens, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
+				$this->parse_field_unsigned($tokens, $i, $max, $f);
+				$this->parse_field_zerofill($tokens, $i, $max, $f);
 				break;
 
 
@@ -529,9 +528,9 @@ class SQLParser{
 			case 'DOUBLE':
 			case 'FLOAT':
 
-				$this->parse_field_length_decimals($tokens, $f);
-				$this->parse_field_unsigned($tokens, $f);
-				$this->parse_field_zerofill($tokens, $f);
+				$this->parse_field_length_decimals($tokens, $i, $max, $f);
+				$this->parse_field_unsigned($tokens, $i, $max, $f);
+				$this->parse_field_zerofill($tokens, $i, $max, $f);
 				break;
 
 
@@ -539,10 +538,10 @@ class SQLParser{
 			case 'DECIMAL':
 			case 'NUMERIC':
 
-				$this->parse_field_length_decimals($tokens, $f);
-				$this->parse_field_length($tokens, $f);
-				$this->parse_field_unsigned($tokens, $f);
-				$this->parse_field_zerofill($tokens, $f);
+				$this->parse_field_length_decimals($tokens, $i, $max, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
+				$this->parse_field_unsigned($tokens, $i, $max, $f);
+				$this->parse_field_zerofill($tokens, $i, $max, $f);
 				break;
 
 
@@ -551,30 +550,30 @@ class SQLParser{
 			case 'BIT':
 			case 'BINARY':
 
-				$this->parse_field_length($tokens, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
 				break;
 
 
 			# VARBINARY(length)
 			case 'VARBINARY':
 
-				$this->parse_field_length($tokens, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
 				break;
 
 			# CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'CHAR':
 
-				$this->parse_field_length($tokens, $f);
-				$this->parse_field_charset($tokens, $f);
-				$this->parse_field_collate($tokens, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
+				$this->parse_field_charset($tokens, $i, $f);
+				$this->parse_field_collate($tokens, $i, $f);
 				break;
 
 			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
 
-				$this->parse_field_length($tokens, $f);
-				$this->parse_field_charset($tokens, $f);
-				$this->parse_field_collate($tokens, $f);
+				$this->parse_field_length($tokens, $i, $max, $f);
+				$this->parse_field_charset($tokens, $i, $f);
+				$this->parse_field_collate($tokens, $i, $f);
 				break;
 
 			# TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -587,8 +586,8 @@ class SQLParser{
 			case 'LONGTEXT':
 
 				# binary
-				$this->parse_field_charset($tokens, $f);
-				$this->parse_field_collate($tokens, $f);
+				$this->parse_field_charset($tokens, $i, $f);
+				$this->parse_field_collate($tokens, $i, $f);
 				break;
 
 			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -596,9 +595,9 @@ class SQLParser{
 			case 'ENUM':
 			case 'SET':
 
-				$f['values'] = $this->parse_value_list($tokens);
-				$this->parse_field_charset($tokens, $f);
-				$this->parse_field_collate($tokens, $f);
+				$f['values'] = $this->parse_value_list($tokens, $i);
+				$this->parse_field_charset($tokens, $i, $f);
+				$this->parse_field_collate($tokens, $i, $f);
 				break;
 
 			default:
@@ -607,26 +606,25 @@ class SQLParser{
 
 
 		# [NOT NULL | NULL]
-		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'NOT NULL'){
+		if ($i <= $max && StrToUpper($tokens[$i]) == 'NOT NULL'){
 			$f['null'] = false;
-			array_shift($tokens);
+			$i++;
 		}
-		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'NULL'){
+		if ($i <= $max && StrToUpper($tokens[$i]) == 'NULL'){
 			$f['null'] = true;
-			array_shift($tokens);
+			$i++;
 		}
 
 		# [DEFAULT default_value]
-		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'DEFAULT'){
-			$f['default'] = $this->decode_value($tokens[1]);
-			array_shift($tokens);
-			array_shift($tokens);
+		if ($i+1 <= $max && StrToUpper($tokens[$i]) == 'DEFAULT'){
+			$i++;
+			$f['default'] = $this->decode_value($tokens[$i++]);
 		}
 
 		# [AUTO_INCREMENT]
-		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'AUTO_INCREMENT'){
+		if ($i <= $max && StrToUpper($tokens[$i]) == 'AUTO_INCREMENT'){
 			$f['auto_increment'] = true;
-			array_shift($tokens);
+			$i++;
 		}
 
 		# [UNIQUE [KEY] | [PRIMARY] KEY]
@@ -635,7 +633,7 @@ class SQLParser{
 		# [STORAGE {DISK|MEMORY|DEFAULT}]
 		# [reference_definition]
 
-		if (count($tokens)) $f['more'] = $tokens;
+		if ($i < $max) $f['more'] = array_slice($tokens, $i, $max-$i);
 
 		return $f;
 	}
@@ -794,10 +792,10 @@ class SQLParser{
 		return $out;
 	}
 
-	function parse_index_type(&$tokens, &$index){
-		if (count($tokens) >= 1){
-			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'btree'; array_shift($tokens); }
-			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'hash'; array_shift($tokens); }
+	function parse_index_type($tokens, &$i, $max, &$index){
+		if ($i <= $max){
+			if ($tokens[$i] == 'USING BTREE'){ $index['mode'] = 'btree'; $i++; }
+			if ($tokens[$i] == 'USING HASH' ){ $index['mode'] = 'hash'; $i++; }
 		}
 	}
 
@@ -846,28 +844,27 @@ class SQLParser{
 		}
 	}
 
-	function parse_index_options(&$tokens, &$index){
+	function parse_index_options($tokens, &$i, $max, &$index){
+
 		# index_option:
 		#    KEY_BLOCK_SIZE [=] value
 		#  | index_type
 		#  | WITH PARSER parser_name
 
-		if (count($tokens) >= 1){
-			if ($tokens[0] == 'KEY_BLOCK_SIZE'){
-				array_shift($tokens);
-				if ($tokens[0] == '=') array_shift($tokens);
-				$index['key_block_size'] = $tokens[0];
-				array_shift($tokens);
+		if ($i <= $max){
+			if ($tokens[$i] == 'KEY_BLOCK_SIZE'){
+				$i++;
+				if ($tokens[$i] == '=') $i++;
+				$index['key_block_size'] = $tokens[$i++];
 			}
 		}
 
-		$this->parse_index_type($tokens, $index);
+		$this->parse_index_type($tokens, $i, $max, $index);
 
-		if (count($tokens) >= 1){
-			if ($tokens[0] == 'WITH PARSER'){
-				$index['parser'] = $tokens[1];
-				array_shift($tokens);
-				array_shift($tokens);
+		if ($i <= $max){
+			if ($tokens[$i] == 'WITH PARSER'){
+				$i++;
+				$index['parser'] = $tokens[$i++];
 			}
 		}
 	}
@@ -877,48 +874,45 @@ class SQLParser{
 	# helper functions for parsing bits of field definitions
 	#
 
-	function parse_field_length(&$tokens, &$f){
-		if (count($tokens) >= 3){
-			if ($tokens[0] == '(' && $tokens[2] == ')'){
-				$f['length'] = $tokens[1];
-				array_shift($tokens);
-				array_shift($tokens);
-				array_shift($tokens);
+	function parse_field_length($tokens, &$i, $max, &$f){
+		if ($i+2 <= $max){
+			if ($tokens[$i] == '(' && $tokens[$i+2] == ')'){
+				$f['length'] = $tokens[$i+1];
+				$i += 3;
 			}
 		}
 	}
 
-	function parse_field_length_decimals(&$tokens, &$f){
-		if (count($tokens) >= 5){
-			if ($tokens[0] == '(' && $tokens[2] == ',' && $tokens[4] == ')'){
-				$f['length'] = $tokens[1];
-				$f['decimals'] = $tokens[3];
-				array_shift($tokens);
-				array_shift($tokens);
-				array_shift($tokens);
-				array_shift($tokens);
-				array_shift($tokens);
+	function parse_field_length_decimals($tokens, &$i, $max, &$f){
+		if ($i+4 <= $max){
+			if ($tokens[$i] == '(' && $tokens[$i+2] == ',' && $tokens[$i+4] == ')'){
+				$f['length'] = $tokens[$i+1];
+				$f['decimals'] = $tokens[$i+3];
+				$i += 5;
 			}
 		}
 	}
 
-	function parse_field_unsigned(&$tokens, &$f){
-		if (count($tokens) >= 1){
-			if (StrToUpper($tokens[0]) == 'UNSIGNED'){
+	function parse_field_unsigned($tokens, &$i, $max, &$f){
+		if ($i <= $max){
+			if (StrToUpper($tokens[$i]) == 'UNSIGNED'){
 				$f['unsigned'] = true;
-				array_shift($tokens);
+				$i++;
 			}
 		}
 	}
 
-	function parse_field_zerofill(&$tokens, &$f){
-		if (count($tokens) >= 1){
-			if (StrToUpper($tokens[0]) == 'ZEROFILL'){
+	function parse_field_zerofill($tokens, &$i, $max, &$f){
+		if ($i <= $max){
+			if (StrToUpper($tokens[$i]) == 'ZEROFILL'){
 				$f['zerofill'] = true;
-				array_shift($tokens);
+				$i++;
 			}
 		}
 	}
+
+
+# EEEEEEEEEEEEEEEEEEEEEEEEEEEEEE FIX FUNCTIONS FROM HERE DOWNWARDS
 
 	function parse_field_charset(&$tokens, &$f){
 		if (count($tokens) >= 1){
