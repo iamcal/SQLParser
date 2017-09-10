@@ -337,7 +337,7 @@ class SQLParser{
 				array_shift($tokens);
 			}else{
 				array_shift($tokens);
-				$constraint = array_shift($tokens);
+				$constraint = $this->decode_identifier(array_shift($tokens));
 			}
 		}
 
@@ -363,6 +363,11 @@ class SQLParser{
 				$index = array(
 					'type' => 'INDEX',
 				);
+
+				if ($has_constraint){
+					$index['constraint'] = true;
+					if (!is_null($constraint)) $index['constraint_name'] = $constraint;
+				}
 
 				if ($tokens[0] == 'UNIQUE'	) $index['type'] = 'UNIQUE';
 				if ($tokens[0] == 'UNIQUE INDEX') $index['type'] = 'UNIQUE';
@@ -393,6 +398,11 @@ class SQLParser{
 				$index = array(
 					'type'	=> 'PRIMARY',
 				);
+
+				if ($has_constraint){
+					$index['constraint'] = true;
+					if (!is_null($constraint)) $index['constraint_name'] = $constraint;
+				}
 
 				array_shift($tokens);
 
@@ -442,10 +452,20 @@ class SQLParser{
 				return;
 
 
-			# older stuff
+			# unsupported
+
+			case 'FOREIGN KEY':
+
+				# TODO
+				$fields[] = array(
+					'_'		=> 'FOREIGN KEY',
+					'tokens'	=> $tokens,
+				);
+				return;
 
 			case 'CHECK':
 
+				# TODO
 				$fields[] = array(
 					'_'		=> 'CHECK',
 					'tokens'	=> $tokens,

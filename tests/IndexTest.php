@@ -53,7 +53,17 @@
 
 		function testConstraints(){
 
-			# TODO
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, CONSTRAINT UNIQUE INDEX(bar))");
+			$this->assertEquals($tbl['indexes'][0]['constraint'], true);
+			$this->assertEquals(array_key_exists('constraint_name', $tbl['indexes'][0]), false);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, CONSTRAINT `qux` UNIQUE INDEX(bar))");
+			$this->assertEquals($tbl['indexes'][0]['constraint'], true);
+			$this->assertEquals($tbl['indexes'][0]['constraint_name'], 'qux');
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, CONSTRAINT `qux` PRIMARY KEY(bar))");
+			$this->assertEquals($tbl['indexes'][0]['constraint'], true);
+			$this->assertEquals($tbl['indexes'][0]['constraint_name'], 'qux');
 		}
 
 		function testIndexNames(){
