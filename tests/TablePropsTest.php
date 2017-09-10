@@ -69,4 +69,24 @@
 			$this->assertEquals($tbl['name'], "foo");
 			$this->assertEquals($tbl['props']['temporary'], true);
 		}
+
+		function testIfNotExists(){
+
+			$tbl1 = $this->get_first_table("CREATE TABLE bar");
+			$tbl2 = $this->get_first_table("CREATE TABLE IF NOT EXISTS bar");
+
+			# these props wont match, since it's the src sql
+			unset($tbl1['sql']);
+			unset($tbl2['sql']);
+
+			$this->assertEquals(var_export($tbl1, true), var_export($tbl2, true));
+		}
+
+		function testCreateTableLike(){
+
+			$tbl = $this->get_first_table("CREATE TABLE foo LIKE `bar`");
+
+			$this->assertEquals($tbl['name'], "foo");
+			$this->assertEquals($tbl['like'], "bar");
+		}
 	}
