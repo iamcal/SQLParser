@@ -12,6 +12,8 @@ class SQLParser{
 	public $tables = array();
 	public $source_map = array();
 
+	public $find_single_table = false;
+
 	public function parse($sql){
 
 		// stashes tokens and source_map in $this
@@ -206,7 +208,7 @@ class SQLParser{
 				$table['sql'] = $stmt['sql'];
 			}
 
-			if (isset($GLOBALS['_find_single_table']) && $GLOBALS['_find_single_table'] && count($tables)) return array(
+			if ($this->find_single_table && count($tables)) return array(
 				'tables' => $tables,
 			);
 		}

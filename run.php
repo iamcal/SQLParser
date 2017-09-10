@@ -36,7 +36,7 @@ if (0){
 
 if (1){
 
-	$GLOBALS['_find_single_table'] = 0;
+	$obj->find_single_table = true;
 
 	$s = microtime(true);
 	$obj->parse($sql);
