@@ -798,8 +798,8 @@ class SQLParser{
 
 	function parse_index_mode(&$tokens, &$index){
 		if (count($tokens) >= 1){
-			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'BTREE'; array_shift($tokens); }
-			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'HASH'; array_shift($tokens); }
+			if ($tokens[0] == 'USING BTREE'){ $index['mode'] = 'BTREE'; array_shift($tokens); return; }
+			if ($tokens[0] == 'USING HASH' ){ $index['mode'] = 'HASH'; array_shift($tokens); return; }
 		}
 	}
 
@@ -853,6 +853,7 @@ class SQLParser{
 		#    KEY_BLOCK_SIZE [=] value
 		#  | index_type
 		#  | WITH PARSER parser_name
+		#  | COMMENT 'string'
 
 		if (count($tokens) >= 1){
 			if ($tokens[0] == 'KEY_BLOCK_SIZE'){
@@ -868,6 +869,14 @@ class SQLParser{
 		if (count($tokens) >= 1){
 			if ($tokens[0] == 'WITH PARSER'){
 				$index['parser'] = $tokens[1];
+				array_shift($tokens);
+				array_shift($tokens);
+			}
+		}
+
+		if (count($tokens) >= 1){
+			if ($tokens[0] == 'COMMENT'){
+				$index['comment'] = $this->decode_value($tokens[1]);
 				array_shift($tokens);
 				array_shift($tokens);
 			}

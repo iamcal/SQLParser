@@ -134,7 +134,27 @@
 
 		function testIndexOptions(){
 
-			# TODO
+			# key block size
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) KEY_BLOCK_SIZE 4)");
+			$this->assertEquals($tbl['indexes'][0]['key_block_size'], "4");
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) KEY_BLOCK_SIZE=4)");
+			$this->assertEquals($tbl['indexes'][0]['key_block_size'], "4");
+
+			# key mode
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) USING BTREE)");
+			$this->assertEquals($tbl['indexes'][0]['mode'], "BTREE");
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) USING HASH)");
+			$this->assertEquals($tbl['indexes'][0]['mode'], "HASH");
+
+			# parser
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) WITH PARSER foo)");
+			$this->assertEquals($tbl['indexes'][0]['parser'], "foo");
+
+			# comment
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar) COMMENT \"hello world\")");
+			$this->assertEquals($tbl['indexes'][0]['comment'], "hello world");
 		}
 
 		function get_first_table($str){
