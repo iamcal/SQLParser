@@ -1,5 +1,8 @@
 # SQLParser - Parse MySQL schemas in PHP, fast
 
+[![Build Status](https://travis-ci.org/iamcal/SQLParser.svg?branch=master)](https://travis-ci.org/iamcal/SQLParser)
+[![Coverage Status](https://coveralls.io/repos/github/iamcal/SQLParser/badge.svg?branch=master)](https://coveralls.io/github/iamcal/SQLParser?branch=master)
+
 This library was created to parse multiple `CREATE TABLE` schemas and compare them, so
 figure out what needs to be done to migrate one to the other.
 
@@ -7,6 +10,27 @@ This is based on the system used at b3ta, Flickr and then Tiny Speck to check th
 between production and development databases and between shard instances. The original system 
 just showed a diff (see [SchemaDiff](https://github.com/iamcal/SchemaDiff)), but that was a bit
 of a pain.
+
+
+## Installation
+
+You can install this package using composer. To add it to your `composer.json`:
+
+    composer require iamcal/sql-parser
+
+You can then load it using the composer autoloader:
+
+    require_once 'vendor/autoload.php';
+    use iamcal\SQLParser;
+
+    $parser = new SQLParser();
+
+If you don't use composer, you can skip the autoloader and include `src/SQLParser.php` directly.
+
+
+## Usage
+
+TODO
 
 
 ## Performance
