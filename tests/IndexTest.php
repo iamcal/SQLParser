@@ -90,7 +90,46 @@
 
 		function testIndexCols(){
 
-			# TODO
+			# single column
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar))");
+			$this->assertEquals(count($tbl['indexes'][0]['cols']), 1);
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+
+			# multi column
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar, baz))");
+			$this->assertEquals(count($tbl['indexes'][0]['cols']), 2);
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals($tbl['indexes'][0]['cols'][1]['name'], 'baz');
+
+			# length (or not)
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals(array_key_exists('length', $tbl['indexes'][0]['cols'][0]), false);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar (100)))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['length'], '100');
+
+			# direction (or not)
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals(array_key_exists('direction', $tbl['indexes'][0]['cols'][0]), false);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar ASC))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['direction'], "ASC");
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar desc))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['direction'], "DESC");
+
+			# everything
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz INT, PRIMARY KEY (bar (10) ASC, baz DESC))");
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['name'], 'bar');
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['length'], '10');
+			$this->assertEquals($tbl['indexes'][0]['cols'][0]['direction'], "ASC");
+			$this->assertEquals($tbl['indexes'][0]['cols'][1]['name'], 'baz');
+			$this->assertEquals($tbl['indexes'][0]['cols'][1]['direction'], "DESC");
 		}
 
 		function testIndexOptions(){

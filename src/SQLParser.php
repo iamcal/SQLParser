@@ -824,10 +824,10 @@ class SQLParser{
 			}
 
 			if (StrToUpper($tokens[0]) == 'ASC'){
-				$col['direction'] = 'asc';
+				$col['direction'] = 'ASC';
 				array_shift($tokens);
 			}elseif (StrToUpper($tokens[0]) == 'DESC'){
-				$col['direction'] = 'desc';
+				$col['direction'] = 'DESC';
 				array_shift($tokens);
 			}
 
