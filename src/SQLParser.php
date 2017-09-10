@@ -175,9 +175,10 @@ class SQLParser{
 			}
 		}
 		if (count($temp)) {
+
 			$statements[] = array(
 				"tuples" => $temp,
-				"sql" => substr($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]),
+				"sql" => substr($sql, $source_map[$start][0], $source_map[$i-1][0] - $source_map[$start][0] + $source_map[$i-1][1]),
 			);
 		}
 
@@ -200,7 +201,7 @@ class SQLParser{
 			if (StrToUpper($s[0]) == 'CREATE TEMPORARY TABLE'){
 
 				$table = $this->parse_create_table($s, 1, count($s));
-				$table['props']['temp'] = true;
+				$table['props']['temporary'] = true;
 				$tables[$table['name']] = $table;
 				$table['sql'] = $stmt['sql'];
 			}
@@ -281,6 +282,7 @@ class SQLParser{
 		array_shift($args);
 
 		foreach ($args as $v){
+			if ($i >= count($tokens) ) return false;
 			if (StrToUpper($tokens[$i]) != $v) return false;
 			$i++;
 		}
