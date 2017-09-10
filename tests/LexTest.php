@@ -31,11 +31,14 @@
 			$this->lex_test("foo -- bar \n", array("foo"));
 			$this->lex_test("foo -- bar \n ", array("foo"));
 
-
 			$this->lex_test("foo/"."* hello *"."/ bar", array("foo", "bar"));
 			$this->lex_test("foo/"."*hello*"."/ bar", array("foo", "bar"));
 			$this->lex_test("foo/"."* hello \n world *"."/ bar", array("foo", "bar"));
 			$this->lex_test("foo/"."*hello \n world*"."/ bar", array("foo", "bar"));
+
+			$this->lex_test("foo/"."* hello", array("foo"));
+			$this->lex_test("foo/"."* hello *", array("foo"));
+			$this->lex_test("foo/"."* hello \n world", array("foo"));
 		}
 
 		public function testBacktickFields(){
