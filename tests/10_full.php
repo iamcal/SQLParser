@@ -1,10 +1,10 @@
 <?php
 	include(dirname(__FILE__).'/testmore.php');
-	include(dirname(__FILE__).'/../lib_sql_parser.php');
+	include(dirname(__FILE__).'/../src/SQLParser.php');
 
 	function full_test($sql, $expected){
 
-		$obj = new SQLParser();
+		$obj = new iamcal\SQLParser();
 		$obj->parse($sql);
 
 		$lines = array();

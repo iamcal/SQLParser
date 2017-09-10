@@ -1,10 +1,10 @@
 <?php
 	include(dirname(__FILE__).'/testmore.php');
-	include(dirname(__FILE__).'/../lib_sql_parser.php');
+	include(dirname(__FILE__).'/../src/SQLParser.php');
 
 	function table_props_test($tokens, $props_expect){
 
-		$obj = new SQLParser();
+		$obj = new iamcal\SQLParser();
 		$i = 0;
 		$props = $obj->parse_table_props($tokens, $i);
 
