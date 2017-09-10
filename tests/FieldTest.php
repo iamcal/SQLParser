@@ -1,0 +1,187 @@
+<?php
+	use PHPUnit\Framework\TestCase;
+
+	final class FieldTest extends TestCase{
+
+		function testBasicFields(){
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT)");
+			$this->assertEquals(count($tbl['fields']), 1);
+			$this->assertEquals($tbl['fields'][0]['type'], "INT");
+			$this->assertEquals($tbl['fields'][0]['name'], "bar");
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, baz TINYINT)");
+			$this->assertEquals(count($tbl['fields']), 2);
+			$this->assertEquals($tbl['fields'][0]['type'], "INT");
+			$this->assertEquals($tbl['fields'][0]['name'], "bar");
+			$this->assertEquals($tbl['fields'][1]['type'], "TINYINT");
+			$this->assertEquals($tbl['fields'][1]['name'], "baz");
+		}
+
+		function testSimpleFields(){
+
+			# DATE
+			# YEAR
+			# TINYBLOB
+			# BLOB
+			# MEDIUMBLOB
+			# LONGBLOB
+			# JSON
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar DATE)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "DATE",
+				]
+			]);
+		}
+
+		function testInts(){
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar TINYINT)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "TINYINT",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar smallint (4))");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "SMALLINT",
+					'length' => "4",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar MEDIUMINT UNSIGNED)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "MEDIUMINT",
+					'unsigned' => true,
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT ZEROFILL)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "INT",
+					'zerofill' => true,
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar BIGINT(20) UNSIGNED ZEROFILL)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "BIGINT",
+					'length' => "20",
+					'unsigned' => true,
+					'zerofill' => true,
+				]
+			]);
+
+
+		}
+
+		function testFloats(){
+
+			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+			# DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
+			# FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
+		}
+
+		function testNumerics(){
+
+			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+			# NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+		}
+
+		function testTimes(){
+
+			# TIME[(fsp)]
+			# TIMESTAMP[(fsp)]
+			# DATETIME[(fsp)]
+		}
+
+		function testBits(){
+
+			# BIT[(length)]
+		}
+
+		function testChars(){
+
+			# CHAR[(length)] [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# VARCHAR(length) [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# BINARY[(length)]
+			# VARBINARY(length)
+		}
+
+		function testTexts(){
+
+			# TINYTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# TEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# MEDIUMTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# LONGTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+		}
+
+		function testSets(){
+
+			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+			# SET(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+		}
+
+
+		function testSpatials(){
+
+			# GEOMETRY
+			# POINT
+			# LINESTRING
+			# POLYGON
+			# MULTIPOINT
+			# MULTILINESTRING
+			# MULTIPOLYGON
+			# GEOMETRYCOLLECTION
+		}
+
+		function testFieldOptions(){
+
+			# TODO
+
+			# data_type
+			# [NOT NULL | NULL]
+			# [DEFAULT default_value]
+			# [AUTO_INCREMENT]
+			# [UNIQUE [KEY] | [PRIMARY] KEY]
+			# [COMMENT 'string']
+			# [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+			# [STORAGE {DISK|MEMORY|DEFAULT}]
+			# [reference_definition]
+		}
+
+		function testVirtualOptions(){
+
+			# TODO
+
+			# data_type [GENERATED ALWAYS] AS (expression)
+			# [VIRTUAL | STORED]
+			# [UNIQUE [KEY]] | [[PRIMARY] KEY]
+			# [COMMENT comment]
+			# [NOT NULL | NULL]
+		}
+
+
+		function get_first_table($str){
+			$obj = new iamcal\SQLParser();
+			$obj->parse($str);
+
+			$tables = array_keys($obj->tables);
+			$first_key = $tables[0];
+
+			return $obj->tables[$first_key];
+		}
+	}
