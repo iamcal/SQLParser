@@ -296,7 +296,7 @@ class SQLParser{
 		$fields = array();
 		$indexes = array();
 
-		while ($tokens[$i] != ')'){
+		while ($i < count($tokens) && $tokens[$i] != ')'){
 
 			$these_tokens = $this->slice_until_next_field($tokens, $i);
 
@@ -452,23 +452,54 @@ class SQLParser{
 				return;
 
 
-			# unsupported
+			# FOREIGN KEY [index_name] (index_col_name,...) reference_definition
+			#  reference_definition:
+			#    REFERENCES tbl_name (index_col_name,...)
+			#      [MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
+			#      [ON DELETE reference_option]
+			#      [ON UPDATE reference_option]
 
 			case 'FOREIGN KEY':
 
-				# TODO
-				$fields[] = array(
-					'_'		=> 'FOREIGN KEY',
-					'tokens'	=> $tokens,
+				$index = array(
+					'type' => 'FOREIGN',
 				);
+
+				array_shift($tokens);
+
+				if ($tokens[0] != '('){
+					$index['name'] = $this->decode_identifier(array_shift($tokens));
+				}
+
+				$this->parse_index_columns($tokens, $index);
+
+				if ($tokens[0] == 'REFERENCES'){
+					array_shift($tokens);
+					$index['ref_table'] = $this->decode_identifier(array_shift($tokens));
+
+					$old_cols = $index['cols'];
+					$index['cols'] = array();
+					$this->parse_index_columns($tokens, $index);
+					$index['ref_cols'] = $index['cols'];
+					$index['cols'] = $old_cols;
+
+					if (count($tokens) >= 1 && $tokens[0] == 'MATCH FULL'   ){ $index['ref_match'] = 'FULL'   ; array_shift($tokens); }
+					if (count($tokens) >= 1 && $tokens[0] == 'MATCH PARTIAL'){ $index['ref_match'] = 'PARTIAL'; array_shift($tokens); }
+					if (count($tokens) >= 1 && $tokens[0] == 'MATCH SIMPLE' ){ $index['ref_match'] = 'SIMPLE' ; array_shift($tokens); }
+
+					if (count($tokens) > 1 && $tokens[0] == 'ON DELETE'){ array_shift($tokens); $index['ref_on_delete'] = array_shift($tokens); }
+					if (count($tokens) > 1 && $tokens[0] == 'ON UPDATE'){ array_shift($tokens); $index['ref_on_delete'] = array_shift($tokens); }
+				}
+
+				if (count($tokens)) $index['more'] = $tokens;
+				$indexes[] = $index;
 				return;
 
 			case 'CHECK':
 
-				# TODO
-				$fields[] = array(
-					'_'		=> 'CHECK',
-					'tokens'	=> $tokens,
+				$indexes[] = array(
+					'type'		=> 'CHECK',
+					'tokens'	=> array_slice($tokens, 1),
 				);
 				return;
 		}
@@ -481,7 +512,7 @@ class SQLParser{
 		$out = array();
 		$stack = 0;
 
-		while ($i <= count($tokens)){
+		while ($i < count($tokens)){
 			$next = $tokens[$i];
 			if ($next == '('){
 				$stack++;
@@ -748,6 +779,14 @@ class SQLParser{
 			'IF NOT EXISTS',
 			'NOT NULL',
 			'WITH PARSER',
+			'MATCH FULL',
+			'MATCH PARTIAL',
+			'MATCH SIMPLE',
+			'ON DELETE',
+			'ON UPDATE',
+			'SET NULL',
+			'NO ACTION',
+			'SET DEFAULT',
 		);
 
 		$singles = array(
