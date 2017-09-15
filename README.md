@@ -3,13 +3,9 @@
 [![Build Status](https://travis-ci.org/iamcal/SQLParser.svg?branch=master)](https://travis-ci.org/iamcal/SQLParser)
 [![Coverage Status](https://coveralls.io/repos/github/iamcal/SQLParser/badge.svg?branch=master)](https://coveralls.io/github/iamcal/SQLParser?branch=master)
 
-This library was created to parse multiple `CREATE TABLE` schemas and compare them, so
-figure out what needs to be done to migrate one to the other.
-
-This is based on the system used at b3ta, Flickr and then Tiny Speck to check the differences
-between production and development databases and between shard instances. The original system 
-just showed a diff (see [SchemaDiff](https://github.com/iamcal/SchemaDiff)), but that was a bit
-of a pain.
+This library takes MySQL `CREATE TABLE` statements and returns a data structure representing the table that it defines.
+MySQL syntax [version 5.7](https://dev.mysql.com/doc/refman/5.7/en/create-table.html) is supported.
+This library does not try to validate input - the goal is to deconstruct valid `CREATE TABLE` statements.
 
 
 ## Installation
@@ -43,7 +39,16 @@ seconds just to lex the input. This was obviously not a great option.
 The current implementation uses a hand-written lexer which takes around 140ms to lex the same
 input and imposes less odd restrictions. This seems to be the way to go.
 
-Create table syntax: http://dev.mysql.com/doc/refman/5.1/en/create-table.html
+
+## History
+
+This library was created to parse multiple `CREATE TABLE` schemas and compare them, so
+figure out what needs to be done to migrate one to the other.
+
+This is based on the system used at b3ta, Flickr and then Tiny Speck to check the differences
+between production and development databases and between shard instances. The original system 
+just showed a diff (see [SchemaDiff](https://github.com/iamcal/SchemaDiff)), but that was a bit
+of a pain.
 
 
 ## Unsupported features
