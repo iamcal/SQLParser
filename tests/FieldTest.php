@@ -273,6 +273,8 @@
 
 		function testTexts(){
 
+			# TODO
+
 			# TINYTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			# TEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			# MEDIUMTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -281,12 +283,16 @@
 
 		function testSets(){
 
+			# TODO
+
 			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 			# SET(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 		}
 
 
 		function testSpatials(){
+
+			# TODO
 
 			# GEOMETRY
 			# POINT
