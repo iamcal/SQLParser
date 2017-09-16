@@ -26,7 +26,77 @@ If you don't use composer, you can skip the autoloader and include `src/SQLParse
 
 ## Usage
 
-TODO
+To extract the tables defined in SQL:
+
+    $parser = new SQLParser();
+    $parser->parse($sql);
+
+    print_r($parser->tables);
+
+The `tables` property is an array of tables, each of which is a nested array structure defining the 
+table's structure:
+
+	CREATE TABLE `achievements_counts` (
+	  `achievement_id` int(10) unsigned NOT NULL,
+	  `num_players` int(10) unsigned NOT NULL,
+	  `date_updated` int(10) unsigned NOT NULL,
+	  PRIMARY KEY (`achievement_id`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+	[
+		'achievements_counts' => [
+			'name' => 'achievements_counts',
+			'fields' => [
+				[
+					'name' => 'achievement_id',
+					'type' => 'INT',
+					'length' => '10',
+					'unsigned' => true,
+					'null' => false,
+				],
+				[
+					'name' => 'num_players',
+					'type' => 'INT',
+					'length' => '10',
+					'unsigned' => true,
+					'null' => false,
+				],
+				[
+					'name' => 'date_updated',
+					'type' => 'INT',
+					'length' => '10',
+					'unsigned' => true,
+					'null' => false,
+				],
+			],
+			'indexes' => [
+				[
+					'type' => 'PRIMARY',
+					'cols' => [
+						[
+							'name' => 'achievement_id',
+						],
+					],
+				],
+			],
+			'props' => [
+				'ENGINE' => 'InnoDB',
+				'CHARSET' => 'utf8',
+			],
+		],
+	]
+
+You can also use the lexer directly to work with other piece of SQL:
+
+    $parser = new SQLParser();
+    $parser->lex($sql);
+
+    print($parser->tokens);
+
+The `tokens` property contains an array of tokens. SQL keywords are returned as uppercase, 
+with multi-word terms (e.g. `DEFAULT CHARACTER SET`) as a single token. Strings and escaped
+identifiers are not further processed; they are returned exactly as expressed in the input SQL.
 
 
 ## Performance

@@ -28,8 +28,9 @@ class SQLParser{
 	# lex and collapse tokens
 	#
 	public function lex($sql) {
-		$this->source_map = $this->_lex($sql);
-		$this->tokens = $this->_extract_tokens($sql, $this->source_map);
+		$this->sql = $sql;
+		$this->source_map = $this->_lex($this->sql);
+		$this->tokens = $this->_extract_tokens($this->sql, $this->source_map);
 		return $this->tokens;
 	}
 
