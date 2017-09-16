@@ -628,17 +628,19 @@ class SQLParser{
 				$this->parse_field_length($tokens, $f);
 				break;
 
-			# CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# CHAR[(length)] [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'CHAR':
 
+				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
 				$this->parse_field_charset($tokens, $f);
 				$this->parse_field_collate($tokens, $f);
 				break;
 
-			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
+			# VARCHAR(length) [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
 
+				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
 				$this->parse_field_charset($tokens, $f);
 				$this->parse_field_collate($tokens, $f);
@@ -653,7 +655,7 @@ class SQLParser{
 			case 'MEDIUMTEXT':
 			case 'LONGTEXT':
 
-				# binary
+				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_charset($tokens, $f);
 				$this->parse_field_collate($tokens, $f);
 				break;
@@ -992,6 +994,15 @@ class SQLParser{
 		}
 	}
 
+	function parse_field_binary(&$tokens, &$f){
+		if (count($tokens) >= 1){
+			if (StrToUpper($tokens[0]) == 'BINARY'){
+				$f['binary'] = true;
+				array_shift($tokens);
+			}
+		}
+	}
+
 	function parse_field_unsigned(&$tokens, &$f){
 		if (count($tokens) >= 1){
 			if (StrToUpper($tokens[0]) == 'UNSIGNED'){
@@ -1013,7 +1024,7 @@ class SQLParser{
 	function parse_field_charset(&$tokens, &$f){
 		if (count($tokens) >= 1){
 			if (StrToUpper($tokens[0]) == 'CHARACTER SET'){
-				$f['character_set'] = $tokens[1];
+				$f['character_set'] = $this->decode_identifier($tokens[1]);
 				array_shift($tokens);
 				array_shift($tokens);
 			}
@@ -1023,7 +1034,7 @@ class SQLParser{
 	function parse_field_collate(&$tokens, &$f){
 		if (count($tokens) >= 1){
 			if (StrToUpper($tokens[0]) == 'COLLATE'){
-				$f['collation'] = $tokens[1];
+				$f['collation'] = $this->decode_identifier($tokens[1]);
 				array_shift($tokens);
 				array_shift($tokens);
 			}

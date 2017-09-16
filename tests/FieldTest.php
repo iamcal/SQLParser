@@ -187,6 +187,23 @@
 		function testBits(){
 
 			# BIT[(length)]
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar bit)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "BIT",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar BIT (999))");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "BIT",
+					'length' => 999,
+				]
+			]);
 		}
 
 		function testChars(){
@@ -195,6 +212,63 @@
 			# VARCHAR(length) [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			# BINARY[(length)]
 			# VARBINARY(length)
+
+			$fields = $this->get_fields("bar CHAR BINARY CHARACTER SET `utf19`");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "CHAR",
+					'binary' => true,
+					'character_set' => "utf19",
+
+				]
+			], $fields);
+
+			$fields = $this->get_fields("bar CHAR(15) CHARACTER SET `utf19` COLLATE `utf19_awesome`");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "CHAR",
+					'length' => 15,
+					'character_set' => "utf19",
+					'collation' => "utf19_awesome",
+				]
+			], $fields);
+
+			$fields = $this->get_fields("bar VARCHAR(255)`");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "VARCHAR",
+					'length' => 255,
+				]
+			], $fields);
+
+			$fields = $this->get_fields("bar BINARY");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "BINARY",
+				]
+			], $fields);
+
+			$fields = $this->get_fields("bar BINARY(66)");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "BINARY",
+					'length' => 66,
+				]
+			], $fields);
+
+			$fields = $this->get_fields("bar VARBINARY(1024)");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "VARBINARY",
+					'length' => 1024,
+				]
+			], $fields);
 		}
 
 		function testTexts(){
@@ -250,6 +324,13 @@
 			# [NOT NULL | NULL]
 		}
 
+
+		function get_fields($indexes){
+
+			$sql = "CREATE TABLE foo ($indexes)";
+			$tbl = $this->get_first_table($sql);
+			return $tbl['fields'];
+		}
 
 		function get_first_table($str){
 			$obj = new iamcal\SQLParser();
