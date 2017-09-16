@@ -550,9 +550,6 @@ class SQLParser{
 
 			# DATE
 			case 'DATE':
-			case 'TIME':
-			case 'TIMESTAMP':
-			case 'DATETIME':
 			case 'YEAR':
 			case 'TINYBLOB':
 			case 'BLOB':
@@ -560,6 +557,23 @@ class SQLParser{
 			case 'LONGBLOB':
 
 				# nothing more to read
+				break;
+
+
+			# TIME[(fsp)]
+			case 'TIME':
+			case 'TIMESTAMP':
+			case 'DATETIME':
+
+				# optional fractional seconds precision
+				if (count($tokens) >= 3){
+					if ($tokens[0] == '(' && $tokens[2] == ')'){
+						$f['fsp'] = $tokens[1];
+						array_shift($tokens);
+						array_shift($tokens);
+						array_shift($tokens);
+					}
+				}
 				break;
 
 

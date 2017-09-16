@@ -165,6 +165,23 @@
 			# TIME[(fsp)]
 			# TIMESTAMP[(fsp)]
 			# DATETIME[(fsp)]
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar TIME)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "TIME",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar TIMESTAMP(6))");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "TIMESTAMP",
+					'fsp' => 6,
+				]
+			]);
 		}
 
 		function testBits(){
