@@ -3,14 +3,34 @@
 
 	final class TablePropsTest extends TestCase{
 
-		function table_props_test($tokens, $props_expect){
-
-			$obj = new iamcal\SQLParser();
-			$i = 0;
-			$props = $obj->parse_table_props($tokens, $i);
-
-			$this->assertEquals($props, $props_expect);
-		}
+		# table_options:
+		#     table_option [[,] table_option] ...
+		#
+		# table_option:
+		#     AUTO_INCREMENT [=] value
+		#   | AVG_ROW_LENGTH [=] value
+		#   | [DEFAULT] CHARACTER SET [=] charset_name
+		#   | CHECKSUM [=] {0 | 1}
+		#   | [DEFAULT] COLLATE [=] collation_name
+		#   | COMMENT [=] 'string'
+		#   | COMPRESSION [=] {'ZLIB'|'LZ4'|'NONE'}
+		#   | CONNECTION [=] 'connect_string'
+		#   | {DATA|INDEX} DIRECTORY [=] 'absolute path to directory'
+		#   | DELAY_KEY_WRITE [=] {0 | 1}
+		#   | ENCRYPTION [=] {'Y' | 'N'}
+		#   | ENGINE [=] engine_name
+		#   | INSERT_METHOD [=] { NO | FIRST | LAST }
+		#   | KEY_BLOCK_SIZE [=] value
+		#   | MAX_ROWS [=] value
+		#   | MIN_ROWS [=] value
+		#   | PACK_KEYS [=] {0 | 1 | DEFAULT}
+		#   | PASSWORD [=] 'string'
+		#   | ROW_FORMAT [=] {DEFAULT|DYNAMIC|FIXED|COMPRESSED|REDUNDANT|COMPACT}
+		#   | STATS_AUTO_RECALC [=] {DEFAULT|0|1}
+		#   | STATS_PERSISTENT [=] {DEFAULT|0|1}
+		#   | STATS_SAMPLE_PAGES [=] value
+		#   | TABLESPACE tablespace_name [STORAGE {DISK|MEMORY|DEFAULT}]
+		#   | UNION [=] (tbl_name[,tbl_name]...)
 
 
 		function testEqualsIsOptional(){
@@ -49,44 +69,12 @@
 		# TODO: case conversion, multiple options, optional commas
 
 
-		function get_first_table($str){
+		function table_props_test($tokens, $props_expect){
+
 			$obj = new iamcal\SQLParser();
-			$obj->parse($str);
+			$i = 0;
+			$props = $obj->parse_table_props($tokens, $i);
 
-			$tables = array_keys($obj->tables);
-			$first_key = $tables[0];
-
-			return $obj->tables[$first_key];
-		}
-
-		function testGeneralCreation(){
-
-			$tbl = $this->get_first_table("CREATE TABLE foo");
-			$this->assertEquals($tbl['name'], "foo");
-			$this->assertEquals(array_key_exists('temporary', $tbl['props']), false);
-
-			$tbl = $this->get_first_table("CREATE TEMPORARY TABLE foo");
-			$this->assertEquals($tbl['name'], "foo");
-			$this->assertEquals($tbl['props']['temporary'], true);
-		}
-
-		function testIfNotExists(){
-
-			$tbl1 = $this->get_first_table("CREATE TABLE bar");
-			$tbl2 = $this->get_first_table("CREATE TABLE IF NOT EXISTS bar");
-
-			# these props wont match, since it's the src sql
-			unset($tbl1['sql']);
-			unset($tbl2['sql']);
-
-			$this->assertEquals(var_export($tbl1, true), var_export($tbl2, true));
-		}
-
-		function testCreateTableLike(){
-
-			$tbl = $this->get_first_table("CREATE TABLE foo LIKE `bar`");
-
-			$this->assertEquals($tbl['name'], "foo");
-			$this->assertEquals($tbl['like'], "bar");
+			$this->assertEquals($props, $props_expect);
 		}
 	}
