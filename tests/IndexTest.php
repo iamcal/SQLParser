@@ -191,6 +191,16 @@
 			$this->assertEquals($tbl['indexes'][0]['ref_cols'], array(array("name" => "f_bar")));
 			$this->assertEquals($tbl['indexes'][0]['ref_match'], "FULL");
 			$this->assertEquals($tbl['indexes'][0]['ref_on_delete'], "SET NULL");
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar INT, FOREIGN KEY bar (qux, `quux`) REFERENCES f_foo (f_bar)");
+			$this->assertEquals($tbl['indexes'][0]['type'], "FOREIGN");
+			$this->assertEquals($tbl['indexes'][0]['name'], "bar");
+			$this->assertEquals($tbl['indexes'][0]['cols'], array(
+				array("name" => "qux"),
+				array("name" => "quux"),
+			));
+			$this->assertEquals($tbl['indexes'][0]['ref_table'], "f_foo");
+			$this->assertEquals($tbl['indexes'][0]['ref_cols'], array(array("name" => "f_bar")));
 		}
 
 		function testChecks(){
