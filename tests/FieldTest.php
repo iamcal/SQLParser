@@ -93,12 +93,71 @@
 			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			# DOUBLE[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			# FLOAT[(length,decimals)] [UNSIGNED] [ZEROFILL]
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar REAL)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "REAL",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar double (1,2))");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "DOUBLE",
+					'length' => 1,
+					'decimals' => 2,
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar Float(3,4) UNSIGNED ZEROFILL)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "FLOAT",
+					'length' => 3,
+					'decimals' => 4,
+					'unsigned' => true,
+					'zerofill' => true,
+				]
+			]);
 		}
 
 		function testNumerics(){
 
 			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
 			# NUMERIC[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar Decimal)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "DECIMAL",
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar DECIMAL(1) UNSIGNED)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "DECIMAL",
+					'length' => 1,
+					'unsigned' => true,
+				]
+			]);
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar NUMERIC(1,2) ZEROFILL)");
+			$this->assertEquals($tbl['fields'], [
+				[
+					'name' => "bar",
+					'type' => "NUMERIC",
+					'length' => 1,
+					'decimals' => 2,
+					'zerofill' => true,
+				]
+			]);
 		}
 
 		function testTimes(){
