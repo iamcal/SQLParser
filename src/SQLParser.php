@@ -689,6 +689,10 @@ class SQLParser{
 		# [DEFAULT default_value]
 		if (count($tokens) >= 1 && StrToUpper($tokens[0]) == 'DEFAULT'){
 			$f['default'] = $this->decode_value($tokens[1]);
+			if ($f['default'] === 'NULL'){
+				$f['null'] = true;
+			}
+
 			array_shift($tokens);
 			array_shift($tokens);
 		}
