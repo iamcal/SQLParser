@@ -317,6 +317,17 @@
 			# [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
 			# [STORAGE {DISK|MEMORY|DEFAULT}]
 			# [reference_definition]
+
+			$fields = $this->get_fields("bar VARCHAR(255) DEFAULT NULL");
+			$this->assertEquals([
+				[
+					'name' => "bar",
+					'type' => "VARCHAR",
+					'length' => 255,
+					'default' => 'NULL',
+					'null' => true,
+				]
+			], $fields);
 		}
 
 		function testVirtualOptions(){
