@@ -34,6 +34,16 @@
 			$this->assertEquals($tbl['like'], "bar");
 		}
 
+        function testCreateTableLikeWithDb(){
+
+            $tbl = $this->get_first_table("CREATE TABLE db.foo LIKE `db2`.`bar`");
+
+            $this->assertEquals($tbl['name'], "foo");
+            $this->assertEquals($tbl['database'], "db");
+            $this->assertEquals($tbl['like'], "bar");
+            $this->assertEquals($tbl['like_database'], "db2");
+        }
+
 
 		function get_first_table($str){
 			$obj = new iamcal\SQLParser();

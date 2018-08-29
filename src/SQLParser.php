@@ -198,14 +198,14 @@ class SQLParser{
 
 				$table = $this->parse_create_table($s, 1, count($s));
 				$table['sql'] = $stmt['sql'];
-				$tables[$table['name']] = $table;
+				$tables[$this->generateTableKey($table)] = $table;
 			}
 
 			if (StrToUpper($s[0]) == 'CREATE TEMPORARY TABLE'){
 
 				$table = $this->parse_create_table($s, 1, count($s));
 				$table['props']['temporary'] = true;
-				$tables[$table['name']] = $table;
+				$tables[$this->generateTableKey($table)] = $table;
 				$table['sql'] = $stmt['sql'];
 			}
 
@@ -219,6 +219,15 @@ class SQLParser{
 		);
 	}
 
+	private function generateTableKey(array $table)
+    {
+        if (!is_null($table['database'])) {
+            return $table['database'] . '.' . $table['name'];
+        } else {
+            return $table['name'];
+        }
+    }
+
 
 	function parse_create_table($tokens, $i, $num){
 
@@ -230,8 +239,14 @@ class SQLParser{
 		#
 		# name
 		#
-
+        $database = null;
 		$name = $this->decode_identifier($tokens[$i++]);
+
+		if (isset($tokens[$i]) && $tokens[$i] === '.') {
+		    $i++;
+		    $database = $name;
+		    $name = $this->decode_identifier($tokens[$i++]);
+        }
 
 
 		#
@@ -242,9 +257,18 @@ class SQLParser{
 			$i++;
 			$old_name = $this->decode_identifier($tokens[$i++]);
 
+            $like_database = null;
+            if (isset($tokens[$i]) && $tokens[$i] === '.') {
+                $i++;
+                $like_database = $old_name;
+                $old_name = $this->decode_identifier($tokens[$i++]);
+            }
+
 			return array(
 				'name'	=> $name,
+				'database' => $database,
 				'like'	=> $old_name,
+                'like_database' => $like_database,
 			);
 		}
 
@@ -267,6 +291,7 @@ class SQLParser{
 
 		$table = array(
 			'name'		=> $name,
+            'database'  => $database,
 			'fields'	=> $fields,
 			'indexes'	=> $indexes,
 			'props'		=> $props,
