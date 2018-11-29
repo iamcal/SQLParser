@@ -178,10 +178,12 @@ class SQLParser{
 			}
 		}
 		if (count($temp)) {
-
+			$source_map_start_0 = (isset($source_map[$start]) && isset($source_map[$start][0])) ? $source_map[$start][0] : null;
+			$source_map_start_i_0 = (isset($source_map[$i]) && isset($source_map[$i][0])) ? $source_map[$i][0] : null;
+			$source_map_start_i_1 = (isset($source_map[$i]) && isset($source_map[$i][1])) ? $source_map[$i][1] : null;
 			$statements[] = array(
 				"tuples" => $temp,
-				"sql" => substr($sql, $source_map[$start][0], $source_map[$i-1][0] - $source_map[$start][0] + $source_map[$i-1][1]),
+				"sql" => substr($sql, $source_map_start_0, $source_map_start_i_0 - $source_map_start_0 + $source_map_start_i_1),
 			);
 		}
 
