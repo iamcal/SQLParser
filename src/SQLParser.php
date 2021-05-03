@@ -631,6 +631,7 @@ class SQLParser{
 			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			case 'REAL':
 			case 'DOUBLE':
+			case 'DOUBLE PRECISION':
 			case 'FLOAT':
 
 				$this->parse_field_length_decimals($tokens, $f);
@@ -642,6 +643,8 @@ class SQLParser{
 			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
 			case 'DECIMAL':
 			case 'NUMERIC':
+			case 'DEC':
+			case 'FIXED':
 
 				$this->parse_field_length_decimals($tokens, $f);
 				$this->parse_field_length($tokens, $f);
@@ -676,6 +679,7 @@ class SQLParser{
 
 			# VARCHAR(length) [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
+			case 'CHARACTER VARYING':
 
 				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
@@ -845,6 +849,8 @@ class SQLParser{
 			'SET NULL',
 			'NO ACTION',
 			'SET DEFAULT',
+			'DOUBLE PRECISION',
+			'CHARACTER VARYING',
 		);
 
 		$singles = array(
