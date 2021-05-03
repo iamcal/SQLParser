@@ -592,6 +592,8 @@ class SQLParser{
 			case 'MULTILINESTRING':
 			case 'MULTIPOLYGON':
 			case 'GEOMETRYCOLLECTION':
+			case 'BOOLEAN':
+			case 'BOOL':
 
 				# nothing more to read
 				break;
