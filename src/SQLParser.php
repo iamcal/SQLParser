@@ -583,6 +583,7 @@ class SQLParser{
 			case 'BLOB':
 			case 'MEDIUMBLOB':
 			case 'LONGBLOB':
+			case 'JSON':
 
 				# nothing more to read
 				break;
