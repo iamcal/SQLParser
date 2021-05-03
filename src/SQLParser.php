@@ -79,7 +79,7 @@ class SQLParser{
 			# <regular identifier>
 			# <key word>
 			if (preg_match('![[:alpha:]][[:alnum:]_]*!A', $sql, $m, 0, $pos)){
-				$source_map[] = [$pos, strlen($m[0])];
+				$source_map[] = array($pos, strlen($m[0]));
 				$pos += strlen($m[0]);
 				continue;
 			}
