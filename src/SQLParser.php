@@ -584,6 +584,14 @@ class SQLParser{
 			case 'MEDIUMBLOB':
 			case 'LONGBLOB':
 			case 'JSON':
+			case 'GEOMETRY':
+			case 'POINT':
+			case 'LINESTRING':
+			case 'POLYGON':
+			case 'MULTIPOINT':
+			case 'MULTILINESTRING':
+			case 'MULTIPOLYGON':
+			case 'GEOMETRYCOLLECTION':
 
 				# nothing more to read
 				break;
