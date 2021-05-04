@@ -79,7 +79,7 @@ class SQLParser{
 			# <regular identifier>
 			# <key word>
 			if (preg_match('![[:alpha:]][[:alnum:]_]*!A', $sql, $m, 0, $pos)){
-				$source_map[] = [$pos, strlen($m[0])];
+				$source_map[] = array($pos, strlen($m[0]));
 				$pos += strlen($m[0]);
 				continue;
 			}
@@ -90,7 +90,7 @@ class SQLParser{
 				if ($p2 === false){
 					$pos = $len;
 				}else{
-					$source_map[] = [$pos, 1+$p2-$pos];
+					$source_map[] = array($pos, 1+$p2-$pos);
 					$pos = $p2+1;
 				}
 				continue;
@@ -101,7 +101,7 @@ class SQLParser{
 			#	<period> <unsigned integer>
 			#	<unsigned integer> ::= <digit>...
 			if (preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $m, 0, $pos)){
-				$source_map[] = [$pos, strlen($m[0])];
+				$source_map[] = array($pos, strlen($m[0]));
 				$pos += strlen($m[0]);
 				continue;
 			}
@@ -122,7 +122,7 @@ class SQLParser{
 					}
 					if ($sql[$c] == $q){
 						$slen = $c + 1 - $pos;
-						$source_map[] = [$pos, $slen];
+						$source_map[] = array($pos, $slen);
 						$pos += $slen;
 						break;
 					}
@@ -144,7 +144,7 @@ class SQLParser{
 			# <double period>
 			# <left bracket>
 			# <right bracket>
-			$source_map[] = [$pos, 1];
+			$source_map[] = array($pos, 1);
 			$pos++;
 		}
 
@@ -856,7 +856,7 @@ class SQLParser{
 		foreach ($singles as $s) $smap[$s] = 1;
 
 		$out = array();
-		$out_map = [];
+		$out_map = array();
 
 		$i = 0;
 		$len = count($source_map);
