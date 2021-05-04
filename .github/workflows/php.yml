@@ -56,36 +56,13 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - run: composer require "phpunit/phpunit:${{ matrix.phpunit-versions }}" --dev --no-update
-
-    - run: composer remove php-coveralls/php-coveralls --dev --no-update
-
-    - run: composer require php-coveralls/php-coveralls:~1.0 --dev --no-update
-      if: ${{ matrix.coverage }}
-
-    - run: cat composer.json
-
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v2
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ matrix.php-versions }}-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
-
-    - name: Install dependencies
-      run: composer install --prefer-source --no-interaction --dev
-
     - name: Run tests
       run: ./vendor/bin/phpunit
       if: ${{ !matrix.coverage }}
 
     - name: Run tests with coverage
       run: |
-       mkdir -p build/logs
-       ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-       ls -l build/logs/
+       phpunit --coverage-clover clover.xml
       if: ${{ matrix.coverage }}
 
     - name: Upload coverage results to Coveralls
@@ -93,5 +70,5 @@ jobs:
         COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         composer global require php-coveralls/php-coveralls
-        php-coveralls --coverage_clover=build/logs/clover.xml -v
+        php-coveralls --coverage_clover=clover.xml -v
       if: ${{ matrix.coverage }}
