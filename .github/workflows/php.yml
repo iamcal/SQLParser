@@ -17,6 +17,9 @@ jobs:
         phpunit-versions: ['9.5.4']
         coverage: [false]
         include:
+        - php-versions: '5.3'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
         - php-versions: '5.4'
           operating-system: 'ubuntu-16.04'
           phpunit-versions: '4.8.36'
