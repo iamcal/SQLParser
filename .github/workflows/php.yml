@@ -77,7 +77,10 @@ jobs:
       if: ${{ !matrix.coverage }}
 
     - name: Run tests with coverage
-      run: phpunit --coverage-clover clover.xml
+      run: |
+       mkdir -p build/logs
+       ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+       ls -l build/logs/
       if: ${{ matrix.coverage }}
 
     - name: Upload coverage results to Coveralls
@@ -85,5 +88,5 @@ jobs:
         COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         composer global require php-coveralls/php-coveralls
-        php-coveralls --coverage_clover=clover.xml -v
+        php-coveralls --coverage_clover=build/logs/clover.xml -v
       if: ${{ matrix.coverage }}
