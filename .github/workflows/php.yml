@@ -34,6 +34,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - run: composer require "phpunit/phpunit:${{ matrix.phpunit-versions }}" --no-update
+    - run: composer remove php-coveralls/php-coveralls
 
     - name: Cache Composer packages
       id: composer-cache
