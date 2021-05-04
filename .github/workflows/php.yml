@@ -16,11 +16,14 @@ jobs:
         php-versions: ['8.0']
         phpunit-versions: ['9.5.4']
         include:
-        - operating-system: 'ubuntu-16.04'
-          php-versions: '5.3'
+        - php-versions: '5.4'
+          operating-system: 'ubuntu-16.04'
           phpunit-versions: '4.8.36'
-        - operating-system: 'ubuntu-18.04'
-          php-versions: '7.1'
+        - php-versions: '5.5'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '7.1'
+          operating-system: 'ubuntu-18.04'
           phpunit-versions: '4.8.36'
 
     steps:
