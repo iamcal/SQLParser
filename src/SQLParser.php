@@ -90,7 +90,7 @@ class SQLParser{
 				if ($p2 === false){
 					$pos = $len;
 				}else{
-					$source_map[] = [$pos, 1+$p2-$pos];
+					$source_map[] = array($pos, 1+$p2-$pos);
 					$pos = $p2+1;
 				}
 				continue;
