@@ -31,4 +31,3 @@ jobs:
 
     - name: Run tests
       run: php vendor/bin/phpunit -c phpunit.xml.dist
-
