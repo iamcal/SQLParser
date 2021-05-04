@@ -54,7 +54,12 @@ jobs:
     - uses: actions/checkout@v2
 
     - run: composer require "phpunit/phpunit:${{ matrix.phpunit-versions }}" --dev --no-update
+
     - run: composer remove php-coveralls/php-coveralls --dev --no-update
+
+    - run: composer require php-coveralls/php-coveralls:~1.0 --dev --no-update
+      if: ${{ matrix.coverage }}
+
     - run: cat composer.json
 
     - name: Cache Composer packages
