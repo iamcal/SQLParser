@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         operating-system: ['ubuntu-20.04']
-        php-versions: ['8.0', '8.1']
+        php-versions: ['8.0']
         phpunit-versions: ['9.5.4']
         include:
         - operating-system: 'ubuntu-16.04'
