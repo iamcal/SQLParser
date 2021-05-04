@@ -1,6 +1,6 @@
 # SQLParser - Parse MySQL schemas in PHP, fast
 
-[![Build Status](https://travis-ci.org/iamcal/SQLParser.svg?branch=master)](https://travis-ci.org/iamcal/SQLParser)
+[![Build Status](https://github.com/iamcal/SQLParser/actions/workflows/php.yml/badge.svg)](https://github.com/iamcal/SQLParser/actions)
 [![Coverage Status](https://coveralls.io/repos/github/iamcal/SQLParser/badge.svg?branch=master)](https://coveralls.io/github/iamcal/SQLParser?branch=master)
 
 This library takes MySQL `CREATE TABLE` statements and returns a data structure representing the table that it defines.
