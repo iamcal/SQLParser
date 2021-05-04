@@ -33,7 +33,7 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - run: composer remove phpunit/phpunit
+    - run: composer require "phpunit/phpunit:${{ matrix.phpunit-versions }}" --no-update
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
