@@ -1,0 +1,94 @@
+name: PHP Composer
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: ['ubuntu-20.04']
+        php-versions: ['8.0']
+        phpunit-versions: ['9.5.4']
+        coverage: [false]
+        include:
+        - php-versions: '5.4'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '5.5'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '5.6'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '7.0'
+          operating-system: 'ubuntu-16.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '7.1'
+          operating-system: 'ubuntu-18.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '7.2'
+          operating-system: 'ubuntu-18.04'
+          phpunit-versions: '4.8.36'
+        - php-versions: '7.3'
+          operating-system: 'ubuntu-18.04'
+          phpunit-versions: '7.5.20'
+        - php-versions: '7.4'
+          operating-system: 'ubuntu-20.04'
+          phpunit-versions: '7.5.20'
+          coverage: true
+
+    steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
+        coverage: xdebug
+        tools: phpunit:${{ matrix.phpunit-versions }}
+
+    - uses: actions/checkout@v2
+
+    - run: composer require "phpunit/phpunit:${{ matrix.phpunit-versions }}" --dev --no-update
+
+    - run: composer remove php-coveralls/php-coveralls --dev --no-update
+
+    - run: composer require php-coveralls/php-coveralls:~1.0 --dev --no-update
+      if: ${{ matrix.coverage }}
+
+    - run: cat composer.json
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php-versions }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-source --no-interaction --dev
+
+    - name: Run tests
+      run: ./vendor/bin/phpunit
+      if: ${{ !matrix.coverage }}
+
+    - name: Run tests with coverage
+      run: |
+       mkdir -p build/logs
+       ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+       ls -l build/logs/
+      if: ${{ matrix.coverage }}
+
+    - name: Upload coverage results to Coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        composer global require php-coveralls/php-coveralls
+        php-coveralls --coverage_clover=build/logs/clover.xml -v
+      if: ${{ matrix.coverage }}
