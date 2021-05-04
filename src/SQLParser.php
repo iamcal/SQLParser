@@ -221,15 +221,13 @@ class SQLParser{
 		);
 	}
 
-	private function generateTableKey(array $table)
-    {
-        if (!is_null($table['database'])) {
-            return $table['database'] . '.' . $table['name'];
-        } else {
-            return $table['name'];
-        }
-    }
-
+	private function generateTableKey(array $table){
+		if (!is_null($table['database'])){
+			return $table['database'] . '.' . $table['name'];
+		}else{
+			return $table['name'];
+		}
+	}
 
 	function parse_create_table($tokens, $i, $num){
 
@@ -241,14 +239,15 @@ class SQLParser{
 		#
 		# name
 		#
-        $database = null;
+
+		$database = null;
 		$name = $this->decode_identifier($tokens[$i++]);
 
-		if (isset($tokens[$i]) && $tokens[$i] === '.') {
-		    $i++;
-		    $database = $name;
-		    $name = $this->decode_identifier($tokens[$i++]);
-        }
+		if (isset($tokens[$i]) && $tokens[$i] === '.'){
+			$i++;
+			$database = $name;
+			$name = $this->decode_identifier($tokens[$i++]);
+		}
 
 
 		#
@@ -259,18 +258,18 @@ class SQLParser{
 			$i++;
 			$old_name = $this->decode_identifier($tokens[$i++]);
 
-            $like_database = null;
-            if (isset($tokens[$i]) && $tokens[$i] === '.') {
-                $i++;
-                $like_database = $old_name;
-                $old_name = $this->decode_identifier($tokens[$i++]);
-            }
+			$like_database = null;
+			if (isset($tokens[$i]) && $tokens[$i] === '.'){
+				$i++;
+				$like_database = $old_name;
+				$old_name = $this->decode_identifier($tokens[$i++]);
+			}
 
 			return array(
 				'name'	=> $name,
 				'database' => $database,
 				'like'	=> $old_name,
-                'like_database' => $like_database,
+				'like_database' => $like_database,
 			);
 		}
 
@@ -293,7 +292,7 @@ class SQLParser{
 
 		$table = array(
 			'name'		=> $name,
-            'database'  => $database,
+			'database'	=> $database,
 			'fields'	=> $fields,
 			'indexes'	=> $indexes,
 			'props'		=> $props,
@@ -583,6 +582,17 @@ class SQLParser{
 			case 'BLOB':
 			case 'MEDIUMBLOB':
 			case 'LONGBLOB':
+			case 'JSON':
+			case 'GEOMETRY':
+			case 'POINT':
+			case 'LINESTRING':
+			case 'POLYGON':
+			case 'MULTIPOINT':
+			case 'MULTILINESTRING':
+			case 'MULTIPOLYGON':
+			case 'GEOMETRYCOLLECTION':
+			case 'BOOLEAN':
+			case 'BOOL':
 
 				# nothing more to read
 				break;
@@ -622,6 +632,7 @@ class SQLParser{
 			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			case 'REAL':
 			case 'DOUBLE':
+			case 'DOUBLE PRECISION':
 			case 'FLOAT':
 
 				$this->parse_field_length_decimals($tokens, $f);
@@ -633,6 +644,8 @@ class SQLParser{
 			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
 			case 'DECIMAL':
 			case 'NUMERIC':
+			case 'DEC':
+			case 'FIXED':
 
 				$this->parse_field_length_decimals($tokens, $f);
 				$this->parse_field_length($tokens, $f);
@@ -667,6 +680,7 @@ class SQLParser{
 
 			# VARCHAR(length) [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
+			case 'CHARACTER VARYING':
 
 				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
@@ -836,6 +850,8 @@ class SQLParser{
 			'SET NULL',
 			'NO ACTION',
 			'SET DEFAULT',
+			'DOUBLE PRECISION',
+			'CHARACTER VARYING',
 		);
 
 		$singles = array(

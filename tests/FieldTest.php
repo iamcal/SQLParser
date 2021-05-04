@@ -304,6 +304,13 @@
 			# GEOMETRYCOLLECTION
 		}
 
+		function testJson(){
+
+			# TODO
+
+			# JSON
+		}
+
 		function testFieldOptions(){
 
 			# TODO

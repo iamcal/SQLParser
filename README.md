@@ -128,6 +128,16 @@ MySQL table definitions have a *lot* of options, so some things just aren't supp
 * `UNION` table properties
 * `TABLESPACE` table properties
 * table partitions
-* Spatial field types
+* `FLOAT[(bits)]` fields
+* Deprecated `YEAR(2|4)` fields
+* `ASCII` attribute as a shorthand for `CHARACTER SET latin1`
+* `UNICODE` attribute as a shorthand for `CHARACTER SET ucs2`
+* `NATIONAL` modified for `CHAR` and `VARCHAR` fields
 
 If you need support for one of these features, open an issue or (better) send a pull request with tests.
+
+The specs for each of the four field groupings can be found here:
+* https://dev.mysql.com/doc/refman/5.7/en/numeric-type-syntax.html
+* https://dev.mysql.com/doc/refman/5.7/en/date-and-time-type-syntax.html
+* https://dev.mysql.com/doc/refman/5.7/en/string-type-syntax.html
+* https://dev.mysql.com/doc/refman/5.7/en/spatial-type-overview.html
