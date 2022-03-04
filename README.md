@@ -141,3 +141,12 @@ The specs for each of the four field groupings can be found here:
 * https://dev.mysql.com/doc/refman/5.7/en/date-and-time-type-syntax.html
 * https://dev.mysql.com/doc/refman/5.7/en/string-type-syntax.html
 * https://dev.mysql.com/doc/refman/5.7/en/spatial-type-overview.html
+
+
+## Publishing
+
+To publish a new version:
+
+* Commit changes to master
+* Add git tag
+* Go to https://packagist.org/packages/iamcal/sql-parser and hit "Update"
