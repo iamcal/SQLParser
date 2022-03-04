@@ -143,6 +143,14 @@ The specs for each of the four field groupings can be found here:
 * https://dev.mysql.com/doc/refman/5.7/en/spatial-type-overview.html
 
 
+## Alternatives
+
+If you're using PHP, then [Modyllic](https://github.com/onlinebuddies/modyllic) is a great SQL parser and set of schema management tools.
+
+If you're using Hack, then [Hack SQL Fake](https://github.com/slackhq/hack-sql-fake) allows you to parse SQL and create a fake MySQL
+server for testing, with many (but not all!) features of MySQL.
+
+
 ## Publishing
 
 To publish a new version:
