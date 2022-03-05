@@ -98,6 +98,10 @@ The `tokens` property contains an array of tokens. SQL keywords are returned as 
 with multi-word terms (e.g. `DEFAULT CHARACTER SET`) as a single token. Strings and escaped
 identifiers are not further processed; they are returned exactly as expressed in the input SQL.
 
+By default, the tokenizer will ignore unterminated comments and strings, and stop parsing at 
+that point, producing no further tokens. You can set `$parser->throw_on_bad_syntax = true;` to
+throw an exception of type `iamcal\SQLParserSyntaxException` instead.
+
 
 ## Performance
 

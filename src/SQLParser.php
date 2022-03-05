@@ -2,6 +2,8 @@
 
 namespace iamcal;
 
+class SQLParserSyntaxException extends \Exception { }
+
 class SQLParser{
 
 	#
@@ -13,6 +15,7 @@ class SQLParser{
 	public $source_map = array();
 
 	public $find_single_table = false;
+	public $throw_on_bad_syntax = false;
 
 	public function parse($sql){
 
@@ -59,6 +62,7 @@ class SQLParser{
 			if (preg_match('!--!A', $sql, $m, 0, $pos)){
 				$p2 = strpos($sql, "\n", $pos);
 				if ($p2 === false){
+					if ($this->throw_on_bad_syntax) throw new SQLParserSyntaxException("Unterminated comment at position $pos");
 					$pos = $len;
 				}else{
 					$pos = $p2+1;
@@ -68,6 +72,7 @@ class SQLParser{
 			if (preg_match('!/\\*!A', $sql, $m, 0, $pos)){
 				$p2 = strpos($sql, "*/", $pos);
 				if ($p2 === false){
+					if ($this->throw_on_bad_syntax) throw new SQLParserSyntaxException("Unterminated comment at position $pos");
 					$pos = $len;
 				}else{
 					$pos = $p2+2;
@@ -88,6 +93,7 @@ class SQLParser{
 			if (substr($sql, $pos, 1) == '`'){
 				$p2 = strpos($sql, "`", $pos+1);
 				if ($p2 === false){
+					if ($this->throw_on_bad_syntax) throw new SQLParserSyntaxException("Unterminated backtick at position $pos");
 					$pos = $len;
 				}else{
 					$source_map[] = array($pos, 1+$p2-$pos);
@@ -113,6 +119,7 @@ class SQLParser{
 
 			# <character string literal>
 			if ($sql[$pos] == "'" || $sql[$pos] == '"'){
+				$str_start_pos = $pos;
 				$c = $pos+1;
 				$q = $sql[$pos];
 				while ($c < strlen($sql)){
@@ -127,6 +134,10 @@ class SQLParser{
 						break;
 					}
 					$c++;
+				}
+				if ($c >= strlen($sql)){
+					if ($this->throw_on_bad_syntax) throw new SQLParserSyntaxException("Unterminated string at position $str_start_pos");
+					$pos = $len;
 				}
 				continue;
 			}
