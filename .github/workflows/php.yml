@@ -37,7 +37,7 @@ jobs:
           phpunit-versions: '7.5.20'
           coverage: true
         - php-versions: '8.1'
-          phpunit-versions: '9.5.4'
+          phpunit-versions: '9.5.16'
 
     steps:
     - name: Setup PHP
