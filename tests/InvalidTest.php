@@ -18,23 +18,26 @@
 			$this->assertEquals(count($tokens), 2);
 		}
 
-		function testBrokenSyntaxException1(){
+		function testBrokenSyntaxException(){
 
 			// in exception mode, it throws an exception...
 
 			$obj = new iamcal\SQLParser();
 			$obj->throw_on_bad_syntax = true;
 
-			$this->expectException(iamcal\SQLParserSyntaxException::class);
-			$obj->lex("CREATE TABLE `users ( id int(10) )");
-		}
+			try {
+				$obj->lex("CREATE TABLE `users ( id int(10) )");
+				$this->fail("Expected Exception has not been raised");
+			} catch (Exception $ex) {
+				$this->assertInstanceOf('iamcal\SQLParserSyntaxException', $ex);
+			}
 
-		function testBrokenSyntaxException2(){
+			try {
+				$obj->lex("CREATE TABLE `users` ' ( `id` int(10) )");
+				$this->fail("Expected Exception has not been raised");
+			} catch (Exception $ex) {
+				$this->assertInstanceOf('iamcal\SQLParserSyntaxException', $ex);
+			}
 
-			$obj = new iamcal\SQLParser();
-			$obj->throw_on_bad_syntax = true;
-
-			$this->expectException(iamcal\SQLParserSyntaxException::class);
-			$obj->lex("CREATE TABLE `users` ' ( `id` int(10) )");
 		}
 	}
