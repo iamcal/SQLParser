@@ -2,84 +2,66 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: ['ubuntu-20.04']
-        php-versions: ['8.0']
-        phpunit-versions: ['9.5.4']
+        operating-system: [ubuntu-latest]
+        php-versions: ["5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.1", "8.2"]
         coverage: [false]
-        include:
-        - php-versions: '5.3'
-          phpunit-versions: '4.8.36'
-        - php-versions: '5.4'
-          phpunit-versions: '4.8.36'
-        - php-versions: '5.5'
-          phpunit-versions: '4.8.36'
-        - php-versions: '5.6'
-          phpunit-versions: '4.8.36'
-        - php-versions: '7.0'
-          phpunit-versions: '4.8.36'
-        - php-versions: '7.1'
-          phpunit-versions: '4.8.36'
-        - php-versions: '7.2'
-          phpunit-versions: '4.8.36'
-        - php-versions: '7.3'
-          phpunit-versions: '7.5.20'
-        - php-versions: '7.4'
-          phpunit-versions: '7.5.20'
-          coverage: true
-        - php-versions: '8.1'
-          phpunit-versions: '9.5.16'
 
     steps:
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: ${{ matrix.php-versions }}
-        coverage: xdebug
-        tools: phpunit:${{ matrix.phpunit-versions }}
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          coverage: xdebug
+          tools: composer
+        env:
+          fail-fast: true
 
-    - run: composer remove phpunit/phpunit --dev --no-update
-    - run: composer remove php-coveralls/php-coveralls --dev --no-update
-    - run: cat composer.json
+      - name: Setup problem matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v2
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ matrix.php-versions }}-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
+      - name: Validate composer
+        run: composer validate
 
-    - name: Install dependencies
-      run: composer install --prefer-source --no-interaction --dev
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-    - name: Run tests
-      run: phpunit
-      if: ${{ !matrix.coverage }}
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
 
-    - name: Run tests with coverage
-      run: |
-       mkdir -p build/logs
-       phpunit --coverage-clover build/logs/clover.xml
-       ls -l build/logs/
-      if: ${{ matrix.coverage }}
+      - name: Install dependencies
+        run: composer install --no-progress
 
-    - name: Upload coverage results to Coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        composer global require php-coveralls/php-coveralls
-        php-coveralls --coverage_clover=build/logs/clover.xml -v
-      if: ${{ matrix.coverage }}
+      - name: Run tests
+        run: composer test
+        if: ${{ !matrix.coverage }}
+
+      - name: Run tests with coverage
+        run: |
+          composer test-coverage
+          ls -l build/logs/
+        if: ${{ matrix.coverage }}
+
+      - name: Upload coverage results to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          composer global require php-coveralls/php-coveralls
+          php-coveralls --coverage_clover=build/logs/clover.xml -v
+        if: ${{ matrix.coverage }}
