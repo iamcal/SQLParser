@@ -17,6 +17,8 @@ class SQLParser{
 	public $find_single_table = false;
 	public $throw_on_bad_syntax = false;
 
+	public $sql;
+
 	public function parse($sql){
 
 		// stashes tokens and source_map in $this
