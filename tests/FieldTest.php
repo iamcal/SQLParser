@@ -335,6 +335,19 @@
 					'null' => true,
 				)
 			), $fields);
+
+			$fields = $this->get_fields("bar INT NOT NULL DEFAULT -1");
+			$this->assertEquals(array(
+				array(
+					'name' => "bar",
+					'type' => "INT",
+					'default' => '-1',
+					'null' => false,
+				)
+			), $fields);
+
+			$fields = $this->get_fields("ucount int NOT NULL comment 'user count'");
+			$this->assertEquals('user count', $fields[0]['comment']);
 		}
 
 		function testVirtualOptions(){
