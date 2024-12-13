@@ -335,6 +335,16 @@
 					'null' => true,
 				)
 			), $fields);
+
+			$fields = $this->get_fields("bar INT NOT NULL DEFAULT -1");
+			$this->assertEquals(array(
+				array(
+					'name' => "bar",
+					'type' => "INT",
+					'default' => '-1',
+					'null' => false,
+				)
+			), $fields);
 		}
 
 		function testVirtualOptions(){
