@@ -727,7 +727,7 @@ class SQLParser{
 				break;
 
 			default:
-				die("Unsupported field type: {$f['type']}");
+				throw new SQLParserSyntaxException("Unsupported field type: {$f['type']}");
 		}
 
 
