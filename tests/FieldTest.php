@@ -327,6 +327,46 @@
 					'values' => array('hel"lo'),
 				)
 			));
+
+			# a `''` inside a string quoted with `'`
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar ENUM('hel''lo'))");
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array("hel'lo"),
+				)
+			));
+
+			# a `""` inside a string quoted with `"`
+			$tbl = $this->get_first_table('CREATE TABLE foo (bar ENUM("hel""lo"))');
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array('hel"lo'),
+				)
+			));
+
+			# a `''` inside a string quoted with `"`
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar ENUM(\"hel''lo\"))");
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array("hel''lo"),
+				)
+			));
+
+			# a `""` inside a string quoted with `'`
+			$tbl = $this->get_first_table('CREATE TABLE foo (bar ENUM(\'hel""lo\'))');
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array('hel""lo'),
+				)
+			));
 		}
 
 
