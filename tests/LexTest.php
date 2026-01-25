@@ -68,5 +68,17 @@
 
 			$this->lex_test("foo \"bar\" baz", array("foo", "\"bar\"", "baz"));
 			$this->lex_test("foo \"bar \\\" baz\" qux", array("foo", "\"bar \\\" baz\"", "qux"));
+
+			# a `''` inside a string quoted with `'`
+			$this->lex_test("'hel''lo'", array("'hel''lo'"));
+
+			# a `""` inside a string quoted with `"`
+			$this->lex_test('"hel""lo"', array('"hel""lo"'));
+
+			# a `''` inside a string quoted with `"`
+			$this->lex_test("\"hel''lo\"", array("\"hel''lo\""));
+
+			# a `""` inside a string quoted with `'`
+			$this->lex_test('\'hel""lo\'', array('\'hel""lo\''));
 		}
 	}
