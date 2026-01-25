@@ -129,6 +129,11 @@ class SQLParser{
 						$c += 2;
 						continue;
 					}
+					# quote doubling
+					if ($sql[$c] == $q && isset($sql[$c+1]) && $sql[$c+1] == $q){
+						$c += 2;
+						continue;
+					}
 					if ($sql[$c] == $q){
 						$slen = $c + 1 - $pos;
 						$source_map[] = array($pos, $slen);
