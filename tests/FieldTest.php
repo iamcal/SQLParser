@@ -287,6 +287,46 @@
 
 			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 			# SET(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+
+			# a `\'` inside a string quoted with `'`
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar ENUM('hel\'lo'))");
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array("hel'lo"),
+				)
+			));
+
+			# a `\"` inside a string quoted with `"`
+			$tbl = $this->get_first_table('CREATE TABLE foo (bar ENUM("hel\"lo"))');
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array('hel"lo'),
+				)
+			));
+
+			# a `\'` inside a string quoted with `"`
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar ENUM(\"hel\'lo\"))");
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array("hel'lo"),
+				)
+			));
+
+			# a `\"` inside a string quoted with `'`
+			$tbl = $this->get_first_table('CREATE TABLE foo (bar ENUM(\'hel\"lo\'))');
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "ENUM",
+					'values' => array('hel"lo'),
+				)
+			));
 		}
 
 
