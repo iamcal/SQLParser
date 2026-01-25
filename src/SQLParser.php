@@ -1163,6 +1163,7 @@ class SQLParser{
 				'"'	=> '"',
 			);
 			$out = '';
+			$q = $token[0];
 			for ($i=1; $i<strlen($token)-1; $i++){
 				if ($token[$i] == '\\'){
 					if ($map[$token[$i+1]]){
@@ -1170,6 +1171,10 @@ class SQLParser{
 					}else{
 						$out .= $token[$i+1];
 					}
+					$i++;
+				}elseif ($token[$i] == $q && $token[$i+1] == $q){
+					# quote doubling
+					$out .= $q;
 					$i++;
 				}else{
 					$out .= $token[$i];
