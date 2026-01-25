@@ -1154,6 +1154,8 @@ class SQLParser{
 				'n'	=> "\n",
 				'r'	=> "\r",
 				't'	=> "\t",
+				"'"	=> "'",
+				'"'	=> '"',
 			);
 			$out = '';
 			for ($i=1; $i<strlen($token)-1; $i++){
