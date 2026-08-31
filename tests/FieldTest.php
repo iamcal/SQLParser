@@ -27,12 +27,21 @@
 			# MEDIUMBLOB
 			# LONGBLOB
 			# JSON
+			# UUID
 
 			$tbl = $this->get_first_table("CREATE TABLE foo (bar DATE)");
 			$this->assertEquals($tbl['fields'], array(
 				array(
 					'name' => "bar",
 					'type' => "DATE",
+				)
+			));
+
+			$tbl = $this->get_first_table("CREATE TABLE foo (bar UUID)");
+			$this->assertEquals($tbl['fields'], array(
+				array(
+					'name' => "bar",
+					'type' => "UUID",
 				)
 			));
 		}
