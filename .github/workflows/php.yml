@@ -31,6 +31,10 @@ jobs:
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
+      - name: Remove coverage package for non-target configs
+        run: composer remove --dev php-coveralls/php-coveralls
+        if: ${{ !matrix.coverage }}
+
       - name: Validate composer
         run: composer validate
 
