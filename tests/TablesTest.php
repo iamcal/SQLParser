@@ -34,6 +34,16 @@
 			$this->assertEquals($tbl['like'], "bar");
 		}
 
+		function testDoubleQuotedIdentifiers(){
+
+			$tbl = $this->get_first_table('CREATE TABLE public."references" ("id" INT, "my ""odd"" name" INT)');
+
+			$this->assertEquals($tbl['name'], "references");
+			$this->assertEquals($tbl['database'], "public");
+			$this->assertEquals($tbl['fields'][0]['name'], "id");
+			$this->assertEquals($tbl['fields'][1]['name'], 'my "odd" name');
+		}
+
         function testCreateTableLikeWithDb(){
 
             $tbl = $this->get_first_table("CREATE TABLE db.foo LIKE `db2`.`bar`");

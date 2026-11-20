@@ -1148,6 +1148,10 @@ class SQLParser{
 		if ($token[0] == '`'){
 			return substr($token, 1, -1);
 		}
+		# standard SQL delimited identifier, e.g. PostgreSQL's "references"
+		if ($token[0] == '"'){
+			return str_replace('""', '"', substr($token, 1, -1));
+		}
 		return $token;
 	}
 
