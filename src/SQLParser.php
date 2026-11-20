@@ -689,7 +689,9 @@ class SQLParser{
 				break;
 
 			# CHAR[(length)] [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# CHARACTER[(length)] is the standard SQL spelling of CHAR
 			case 'CHAR':
+			case 'CHARACTER':
 
 				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
