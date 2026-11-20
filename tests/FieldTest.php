@@ -253,6 +253,17 @@
 				)
 			), $fields);
 
+			# CHARACTER is the standard SQL spelling of CHAR, e.g. in PostgreSQL dumps
+			$fields = $this->get_fields("bar CHARACTER(36) NOT NULL");
+			$this->assertEquals(array(
+				array(
+					'name' => "bar",
+					'type' => "CHARACTER",
+					'length' => 36,
+					'null' => false,
+				)
+			), $fields);
+
 			$fields = $this->get_fields("bar BINARY");
 			$this->assertEquals(array(
 				array(

@@ -689,7 +689,9 @@ class SQLParser{
 				break;
 
 			# CHAR[(length)] [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			# CHARACTER[(length)] is the standard SQL spelling of CHAR
 			case 'CHAR':
+			case 'CHARACTER':
 
 				$this->parse_field_binary($tokens, $f);
 				$this->parse_field_length($tokens, $f);
@@ -1145,6 +1147,10 @@ class SQLParser{
 	function decode_identifier($token){
 		if ($token[0] == '`'){
 			return substr($token, 1, -1);
+		}
+		# standard SQL delimited identifier, e.g. PostgreSQL's "references"
+		if ($token[0] == '"'){
+			return str_replace('""', '"', substr($token, 1, -1));
 		}
 		return $token;
 	}
